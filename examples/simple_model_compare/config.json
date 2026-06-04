@@ -1,0 +1,69 @@
+{
+  "run_name": "simple-model-compare",
+  "description": "Compare three mock LLM choices on a small customer-support style task.",
+  "models": [
+    {
+      "id": "fast-cheap",
+      "provider": "mock",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "mock_latency_ms": 180,
+      "mock_responses": {
+        "refund-policy": "The customer can request a refund within the policy window. Ask for the order id, confirm eligibility, and escalate if the case is outside the normal refund policy.",
+        "cost-summary": "Teams should compare quality, latency, and cost before scaling because a model that looks good in a prototype can become too slow or expensive in production."
+      }
+    },
+    {
+      "id": "balanced",
+      "provider": "mock",
+      "input_price_per_1m": 0.6,
+      "output_price_per_1m": 2.0,
+      "mock_latency_ms": 320,
+      "mock_responses": {
+        "refund-policy": "The customer is likely eligible for a refund under the policy. Confirm the order id, check the return window, document the reason, and provide a clear next step. Escalate unusual cases.",
+        "cost-summary": "A team should compare model quality, latency, and cost before scaling so product decisions are based on measurable tradeoffs rather than only demo performance."
+      }
+    },
+    {
+      "id": "strong-expensive",
+      "provider": "mock",
+      "input_price_per_1m": 2.5,
+      "output_price_per_1m": 10.0,
+      "mock_latency_ms": 540,
+      "mock_responses": {
+        "refund-policy": "Based on the support policy, the customer may be eligible for a refund. First confirm the order id, purchase date, and return window. If the policy allows it, provide the refund process. If the case is outside policy, escalate with context.",
+        "cost-summary": "Before scaling an AI product, engineering leaders should compare model quality, latency, and cost across realistic tasks. This avoids overpaying for capabilities the workflow does not need."
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "id": "refund-policy",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a precise support assistant. Give concise operational guidance."
+        },
+        {
+          "role": "user",
+          "content": "A customer says the product arrived damaged and asks for a refund. What should the support agent do?"
+        }
+      ],
+      "expected_keywords": ["refund", "policy", "order", "escalate"]
+    },
+    {
+      "id": "cost-summary",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You summarize business tradeoffs for engineering leaders."
+        },
+        {
+          "role": "user",
+          "content": "Explain why a team should compare model quality, latency, and cost before scaling an AI product."
+        }
+      ],
+      "expected_keywords": ["quality", "latency", "cost"]
+    }
+  ]
+}

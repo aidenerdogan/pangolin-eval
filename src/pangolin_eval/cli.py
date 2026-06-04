@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from pangolin_eval.config import load_config, parse_models, parse_prompts
+from pangolin_eval.reporting import write_reports
+from pangolin_eval.runner import run_comparison
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="pangolin-eval",
+        description="Compare LLM workloads by cost, latency, and quality.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    run_parser = subparsers.add_parser("run", help="Run a model comparison.")
+    run_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a JSON comparison config.",
+    )
+    run_parser.add_argument(
+        "--out",
+        required=True,
+        help="Output directory for report.json and report.md.",
+    )
+
+    validate_parser = subparsers.add_parser(
+        "validate",
+        help="Validate a comparison config without running providers.",
+    )
+    validate_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a JSON comparison config.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    try:
+        if args.command == "run":
+            return run_command(Path(args.config), Path(args.out))
+        if args.command == "validate":
+            return validate_command(Path(args.config))
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
+    parser.print_help()
+    return 1
+
+
+def run_command(config_path: Path, out_dir: Path) -> int:
+    config = load_config(config_path)
+    report = run_comparison(
+        run_name=config.get("run_name", config_path.stem),
+        description=config.get("description", ""),
+        models=parse_models(config),
+        prompts=parse_prompts(config),
+    )
+    json_path, markdown_path = write_reports(report, out_dir)
+    print(f"Wrote JSON report: {json_path}")
+    print(f"Wrote Markdown report: {markdown_path}")
+    return 0
+
+
+def validate_command(config_path: Path) -> int:
+    load_config(config_path)
+    print(f"Config is valid: {config_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
