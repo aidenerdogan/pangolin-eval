@@ -53,6 +53,15 @@ PYTHONPATH=src python -m pangolin_eval.cli validate \
   --config examples/simple_model_compare/config.json
 ```
 
+Run the synthetic RAG evaluation:
+
+```bash
+PYTHONPATH=src python -m pangolin_eval.cli rag \
+  --config examples/rag_eval/config.json \
+  --out reports/rag_eval \
+  --content-mode metadata-only
+```
+
 Install locally for CLI usage:
 
 ```bash
@@ -86,11 +95,13 @@ Version 0.1 focuses on the smallest useful artifact:
 - Markdown and JSON reporting
 - versioned report schema
 - metadata-only report mode for privacy-conscious runs
+- synthetic RAG evaluation CLI and report
 
 ## Planned Scope
 
 - LiteLLM integration for multi-provider routing
 - RAG evaluation examples
+- RAG evaluation reports
 - agent workflow tracing
 - OpenTelemetry traces
 - budget guardrails
@@ -103,7 +114,7 @@ JSON reports declare a schema version and content mode:
 - `schema_version`: currently `pangolin-eval.report.v3`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v3.json](schemas/report.v3.json), and [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v3.json](schemas/report.v3.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), and [schemas/rag-report.v1.json](schemas/rag-report.v1.json).
 
 ## Open-Core Direction
 

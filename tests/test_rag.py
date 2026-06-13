@@ -1,0 +1,74 @@
+from __future__ import annotations
+
+import unittest
+
+from pangolin_eval.models import ModelTarget, RagDocument, RagQuestion
+from pangolin_eval.rag import (
+    cites_any_document,
+    faithfulness_score,
+    run_rag_evaluation,
+    unused_context_ratio,
+)
+
+
+class RagTest(unittest.TestCase):
+    def test_rag_evaluation_computes_context_metrics(self) -> None:
+        report = run_rag_evaluation(
+            run_name="rag",
+            description="",
+            models=[
+                ModelTarget(
+                    id="mock-model",
+                    provider="mock",
+                    input_price_per_1m=0.1,
+                    output_price_per_1m=0.2,
+                    mock_response="Refunds are available within 30 days in [doc-1].",
+                    mock_latency_ms=100,
+                )
+            ],
+            documents=[
+                RagDocument(
+                    id="doc-1",
+                    text="Refunds are available within 30 days for damaged items.",
+                )
+            ],
+            questions=[
+                RagQuestion(
+                    id="case-1",
+                    question="What is the refund window?",
+                    context_ids=["doc-1"],
+                    expected_keywords=["refund", "30 days"],
+                )
+            ],
+        )
+
+        result = report.results[0]
+
+        self.assertEqual(report.schema_version, "pangolin-eval.rag_report.v1")
+        self.assertTrue(result.success)
+        self.assertEqual(result.answer_coverage, 1.0)
+        self.assertEqual(result.faithfulness_score, 1.0)
+        self.assertGreater(result.context_efficiency or 0, 0)
+        self.assertFalse(result.missing_citation)
+
+    def test_rag_helpers_flag_missing_citation_and_unused_context(self) -> None:
+        self.assertTrue(cites_any_document("Use [doc-1].", ["doc-1"]))
+        self.assertFalse(cites_any_document("No citation.", ["doc-1"]))
+        self.assertEqual(
+            faithfulness_score("refund 30 days", "refund 30 days", ["refund"]),
+            1.0,
+        )
+        self.assertEqual(
+            unused_context_ratio(
+                [
+                    RagDocument(id="doc-1", text="refund policy"),
+                    RagDocument(id="doc-2", text="unrelated billing"),
+                ],
+                ["refund"],
+            ),
+            0.5,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

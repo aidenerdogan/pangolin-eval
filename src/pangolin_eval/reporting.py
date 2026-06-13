@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from pangolin_eval.models import ModelSummary, RunReport
+from pangolin_eval.models import ModelSummary, RagReport, RunReport
 
 
 def write_reports(report: RunReport, out_dir: str | Path) -> tuple[Path, Path]:
@@ -19,6 +19,21 @@ def write_reports(report: RunReport, out_dir: str | Path) -> tuple[Path, Path]:
         encoding="utf-8",
     )
     markdown_path.write_text(render_markdown(report), encoding="utf-8")
+    return json_path, markdown_path
+
+
+def write_rag_report(report: RagReport, out_dir: str | Path) -> tuple[Path, Path]:
+    output_path = Path(out_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    json_path = output_path / "rag_report.json"
+    markdown_path = output_path / "rag_report.md"
+
+    json_path.write_text(
+        json.dumps(asdict(report), indent=2),
+        encoding="utf-8",
+    )
+    markdown_path.write_text(render_rag_markdown(report), encoding="utf-8")
     return json_path, markdown_path
 
 
@@ -120,6 +135,66 @@ def render_markdown(report: RunReport) -> str:
                     "",
                 ]
             )
+    return "\n".join(lines)
+
+
+def render_rag_markdown(report: RagReport) -> str:
+    lines = [
+        f"# {report.run_name}",
+        "",
+        f"- Schema version: `{report.schema_version}`",
+        f"- Content mode: `{report.content_mode}`",
+        "",
+    ]
+    if report.description:
+        lines.extend([report.description, ""])
+
+    lines.extend(
+        [
+            "## RAG Results",
+            "",
+            "| Model | Question | Coverage | Faithfulness | Context tokens | Answer tokens | Context efficiency | Unused context | Missing citation | Cost USD |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: |",
+        ]
+    )
+    for result in report.results:
+        lines.append(
+            f"| {result.model_id} "
+            f"| {result.question_id} "
+            f"| {format_optional_float(result.answer_coverage)} "
+            f"| {format_optional_float(result.faithfulness_score)} "
+            f"| {result.retrieved_context_tokens} "
+            f"| {result.answer_tokens} "
+            f"| {format_optional_float(result.context_efficiency)} "
+            f"| {result.unused_context_signal:.2f} "
+            f"| {'yes' if result.missing_citation else 'no'} "
+            f"| {result.estimated_cost_usd:.8f} |"
+        )
+
+    lines.extend(["", "## Answers", ""])
+    for result in report.results:
+        lines.extend(
+            [
+                f"### {result.model_id} / {result.question_id}",
+                "",
+                f"- Status: {result.status}",
+                f"- Latency: {result.latency_ms} ms",
+                f"- Retrieved context tokens: {result.retrieved_context_tokens}",
+                f"- Answer tokens: {result.answer_tokens}",
+                "",
+            ]
+        )
+        if result.error:
+            lines.extend([f"- Error: {result.error}", ""])
+        if result.response is None:
+            lines.extend(
+                [
+                    "_Response content omitted or unavailable._",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(["```text", result.response, "```", ""])
     return "\n".join(lines)
 
 

@@ -10,9 +10,11 @@ from pangolin_eval.models import (
     GateResult,
     ModelSummary,
     PromptResult,
+    RagReport,
+    RagResult,
     RunReport,
 )
-from pangolin_eval.reporting import render_markdown, write_reports
+from pangolin_eval.reporting import render_markdown, render_rag_markdown, write_reports
 
 
 def sample_report() -> RunReport:
@@ -133,6 +135,33 @@ class ReportingTest(unittest.TestCase):
             schema["properties"]["schema_version"]["const"],
             REPORT_SCHEMA_VERSION,
         )
+
+    def test_render_rag_markdown_includes_metrics(self) -> None:
+        report = RagReport(
+            run_name="rag",
+            description="",
+            results=[
+                RagResult(
+                    question_id="case-1",
+                    model_id="mock-model",
+                    response="Use [doc-1].",
+                    retrieved_context_tokens=10,
+                    answer_tokens=4,
+                    latency_ms=100,
+                    estimated_cost_usd=0.001,
+                    answer_coverage=1.0,
+                    faithfulness_score=1.0,
+                    context_efficiency=100.0,
+                    unused_context_signal=0,
+                    missing_citation=False,
+                )
+            ],
+        )
+
+        markdown = render_rag_markdown(report)
+
+        self.assertIn("## RAG Results", markdown)
+        self.assertIn("| mock-model | case-1 | 1.00 | 1.00 |", markdown)
 
 
 if __name__ == "__main__":

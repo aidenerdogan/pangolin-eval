@@ -1,0 +1,142 @@
+{
+  "run_name": "synthetic-rag-eval",
+  "description": "Synthetic RAG evaluation over product-support, billing, and security notes.",
+  "models": [
+    {
+      "id": "rag-baseline",
+      "provider": "mock",
+      "model_group": "small",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "mock_latency_ms": 220,
+      "mock_responses": {
+        "refund-window": "Refunds are available for damaged items within 30 days according to [support-policy].",
+        "enterprise-sso": "Enterprise plans support SAML SSO and audit logs according to [security-notes].",
+        "billing-owner": "Billing owner changes require an admin request and finance confirmation in [billing-guide].",
+        "data-retention": "Default retention is 90 days, with shorter retention available for enterprise workspaces in [security-notes].",
+        "downgrade-risk": "Downgrading removes enterprise controls but keeps exported reports available from [billing-guide].",
+        "damaged-item": "The support team should collect the order id, confirm damage, and start the refund workflow from [support-policy].",
+        "invoice-delay": "Invoice delays should be escalated to finance after checking billing owner details in [billing-guide].",
+        "audit-log": "Audit logs are available on enterprise plans and help review workspace access in [security-notes].",
+        "trial-limits": "Trial workspaces include limited seats and do not include SAML SSO according to [billing-guide].",
+        "support-escalation": "Escalate policy exceptions with order id, reason, and context from [support-policy]."
+      }
+    }
+  ],
+  "documents": [
+    {
+      "id": "support-policy",
+      "text": "Support agents should collect an order id for damaged items, confirm the refund window, and escalate policy exceptions. Refunds are normally available within 30 days."
+    },
+    {
+      "id": "billing-guide",
+      "text": "Billing owner changes require an admin request and finance confirmation. Trial workspaces have limited seats. Downgrades remove enterprise controls but exported reports remain available."
+    },
+    {
+      "id": "security-notes",
+      "text": "Enterprise plans support SAML SSO, workspace audit logs, and configurable retention. Default retention is 90 days, and shorter retention is available for enterprise workspaces."
+    }
+  ],
+  "questions": [
+    {
+      "id": "refund-window",
+      "question": "How long is the normal refund window for damaged items?",
+      "context_ids": ["support-policy"],
+      "expected_keywords": ["refund", "30 days", "damaged"],
+      "feature": "support",
+      "workflow": "refund-assistance",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "enterprise-sso",
+      "question": "Which plan supports SAML SSO?",
+      "context_ids": ["security-notes"],
+      "expected_keywords": ["enterprise", "SAML", "SSO"],
+      "feature": "security",
+      "workflow": "plan-answering",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "billing-owner",
+      "question": "What is required to change the billing owner?",
+      "context_ids": ["billing-guide"],
+      "expected_keywords": ["admin", "finance", "billing owner"],
+      "feature": "billing",
+      "workflow": "account-admin",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "data-retention",
+      "question": "What is the default data retention period?",
+      "context_ids": ["security-notes"],
+      "expected_keywords": ["90 days", "retention", "enterprise"],
+      "feature": "security",
+      "workflow": "policy-answering",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "downgrade-risk",
+      "question": "What happens when an account downgrades?",
+      "context_ids": ["billing-guide"],
+      "expected_keywords": ["downgrades", "enterprise controls", "reports"],
+      "feature": "billing",
+      "workflow": "plan-answering",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "damaged-item",
+      "question": "What should support collect for a damaged item refund?",
+      "context_ids": ["support-policy"],
+      "expected_keywords": ["order id", "damage", "refund"],
+      "feature": "support",
+      "workflow": "refund-assistance",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "invoice-delay",
+      "question": "When should an invoice delay be escalated?",
+      "context_ids": ["billing-guide"],
+      "expected_keywords": ["finance", "billing owner", "escalated"],
+      "feature": "billing",
+      "workflow": "billing-support",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "audit-log",
+      "question": "What helps review workspace access?",
+      "context_ids": ["security-notes"],
+      "expected_keywords": ["audit logs", "workspace", "enterprise"],
+      "feature": "security",
+      "workflow": "policy-answering",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "trial-limits",
+      "question": "What limitations apply to trial workspaces?",
+      "context_ids": ["billing-guide"],
+      "expected_keywords": ["trial", "limited seats", "SAML"],
+      "feature": "billing",
+      "workflow": "plan-answering",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    },
+    {
+      "id": "support-escalation",
+      "question": "What details are needed for policy exception escalation?",
+      "context_ids": ["support-policy"],
+      "expected_keywords": ["order id", "reason", "context"],
+      "feature": "support",
+      "workflow": "refund-assistance",
+      "environment": "demo",
+      "prompt_version": "rag-v1"
+    }
+  ]
+}

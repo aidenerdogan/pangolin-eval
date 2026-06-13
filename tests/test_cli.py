@@ -98,6 +98,33 @@ class CliTest(unittest.TestCase):
         self.assertEqual(payload["gate_results"][0]["name"], "max_total_cost_usd")
         self.assertFalse(payload["gate_results"][0]["passed"])
 
+    def test_rag_command_writes_report(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "rag",
+                        "--config",
+                        "examples/rag_eval/config.json",
+                        "--out",
+                        temp_dir,
+                        "--content-mode",
+                        "metadata-only",
+                    ]
+                )
+
+            payload = json.loads(
+                (Path(temp_dir) / "rag_report.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Wrote RAG JSON report", stdout.getvalue())
+        self.assertEqual(payload["schema_version"], "pangolin-eval.rag_report.v1")
+        self.assertEqual(payload["content_mode"], "metadata_only")
+        self.assertIsNone(payload["results"][0]["response"])
+
 
 if __name__ == "__main__":
     unittest.main()

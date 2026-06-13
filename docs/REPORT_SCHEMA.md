@@ -52,4 +52,15 @@ schema_version: pangolin-eval.pricing.v1
 
 Set `pricing_catalog` in a config file to load catalog prices and provenance. Add `price_override: true` on a model entry to keep model-level prices instead of applying the catalog.
 
-Future schema versions will add RAG metrics and agent TraceCards.
+## RAG Report
+
+RAG evaluations write `rag_report.json` and use:
+
+```text
+schemas/rag-report.v1.json
+schema_version: pangolin-eval.rag_report.v1
+```
+
+RAG results include retrieved context tokens, answer tokens, answer coverage, simple faithfulness, context efficiency, unused-context signal, missing-citation flag, latency, and estimated cost.
+
+Future schema versions will add agent TraceCards.

@@ -8,7 +8,14 @@ from pathlib import Path
 from pangolin_eval.config import load_config, parse_gates, parse_models, parse_prompts
 from pangolin_eval.gates import evaluate_gates, gates_passed
 from pangolin_eval.pricing import apply_pricing_catalog, load_pricing_catalog
-from pangolin_eval.reporting import write_reports
+from pangolin_eval.rag import (
+    load_rag_config,
+    parse_documents,
+    parse_questions,
+    parse_rag_models,
+    run_rag_evaluation,
+)
+from pangolin_eval.reporting import write_rag_report, write_reports
 from pangolin_eval.runner import run_comparison
 
 
@@ -49,6 +56,24 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Path to a JSON comparison config.",
     )
+
+    rag_parser = subparsers.add_parser("rag", help="Run a RAG evaluation.")
+    rag_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a JSON RAG evaluation config.",
+    )
+    rag_parser.add_argument(
+        "--out",
+        required=True,
+        help="Output directory for rag_report.json and rag_report.md.",
+    )
+    rag_parser.add_argument(
+        "--content-mode",
+        choices=["full", "metadata-only"],
+        default="full",
+        help="Use 'metadata-only' to omit response text from saved RAG reports.",
+    )
     return parser
 
 
@@ -61,6 +86,8 @@ def main(argv: list[str] | None = None) -> int:
             return run_command(Path(args.config), Path(args.out), args.content_mode)
         if args.command == "validate":
             return validate_command(Path(args.config))
+        if args.command == "rag":
+            return rag_command(Path(args.config), Path(args.out), args.content_mode)
     except (OSError, ValueError, RuntimeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
@@ -98,6 +125,23 @@ def run_command(config_path: Path, out_dir: Path, content_mode: str = "full") ->
 def validate_command(config_path: Path) -> int:
     load_config(config_path)
     print(f"Config is valid: {config_path}")
+    return 0
+
+
+def rag_command(config_path: Path, out_dir: Path, content_mode: str = "full") -> int:
+    config = load_rag_config(config_path)
+    normalized_content_mode = content_mode.replace("-", "_")
+    report = run_rag_evaluation(
+        run_name=config.get("run_name", config_path.stem),
+        description=config.get("description", ""),
+        models=parse_rag_models(config),
+        documents=parse_documents(config),
+        questions=parse_questions(config),
+        content_mode=normalized_content_mode,
+    )
+    json_path, markdown_path = write_rag_report(report, out_dir)
+    print(f"Wrote RAG JSON report: {json_path}")
+    print(f"Wrote RAG Markdown report: {markdown_path}")
     return 0
 
 

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aidenerdogan/pangolin-eval/schemas/rag-report.v1.json",
+  "title": "PangolinEval RAG Report v1",
+  "type": "object",
+  "required": [
+    "run_name",
+    "description",
+    "results",
+    "schema_version",
+    "content_mode"
+  ],
+  "properties": {
+    "run_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "pangolin-eval.rag_report.v1"
+    },
+    "content_mode": {
+      "enum": ["full", "metadata_only"]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "question_id",
+          "model_id",
+          "response",
+          "retrieved_context_tokens",
+          "answer_tokens",
+          "latency_ms",
+          "estimated_cost_usd",
+          "answer_coverage",
+          "faithfulness_score",
+          "context_efficiency",
+          "unused_context_signal",
+          "missing_citation",
+          "success",
+          "status",
+          "error"
+        ],
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "model_id": {
+            "type": "string"
+          },
+          "response": {
+            "type": ["string", "null"]
+          },
+          "retrieved_context_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "answer_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "latency_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "answer_coverage": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "faithfulness_score": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "context_efficiency": {
+            "type": ["number", "null"],
+            "minimum": 0
+          },
+          "unused_context_signal": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "missing_citation": {
+            "type": "boolean"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": ["success", "error", "timeout"]
+          },
+          "error": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

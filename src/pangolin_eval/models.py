@@ -6,6 +6,7 @@ from typing import Any
 
 Message = dict[str, str]
 REPORT_SCHEMA_VERSION = "pangolin-eval.report.v3"
+RAG_REPORT_SCHEMA_VERSION = "pangolin-eval.rag_report.v1"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
 
 
@@ -126,4 +127,50 @@ class RunReport:
     gate_results: list[GateResult] = field(default_factory=list)
     aggregations: list[AggregationSummary] = field(default_factory=list)
     schema_version: str = REPORT_SCHEMA_VERSION
+    content_mode: str = "full"
+
+
+@dataclass(frozen=True)
+class RagDocument:
+    id: str
+    text: str
+
+
+@dataclass(frozen=True)
+class RagQuestion:
+    id: str
+    question: str
+    context_ids: list[str]
+    expected_keywords: list[str] = field(default_factory=list)
+    feature: str | None = None
+    workflow: str | None = None
+    environment: str | None = None
+    prompt_version: str | None = None
+
+
+@dataclass(frozen=True)
+class RagResult:
+    question_id: str
+    model_id: str
+    response: str | None
+    retrieved_context_tokens: int
+    answer_tokens: int
+    latency_ms: int
+    estimated_cost_usd: float
+    answer_coverage: float | None
+    faithfulness_score: float | None
+    context_efficiency: float | None
+    unused_context_signal: float
+    missing_citation: bool
+    success: bool = True
+    status: str = "success"
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class RagReport:
+    run_name: str
+    description: str
+    results: list[RagResult]
+    schema_version: str = RAG_REPORT_SCHEMA_VERSION
     content_mode: str = "full"
