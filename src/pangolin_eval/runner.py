@@ -32,7 +32,23 @@ def run_comparison(
     for model in models:
         provider = provider_for(model)
         for prompt in prompts:
-            completion = provider.complete(model, prompt)
+            completion, retry_count, error, timed_out = complete_with_retries(
+                provider,
+                model,
+                prompt,
+            )
+            if error is not None:
+                results.append(
+                    failed_result(
+                        model=model,
+                        prompt=prompt,
+                        error=error,
+                        retry_count=retry_count,
+                        timed_out=timed_out,
+                    )
+                )
+                continue
+
             quality_score = keyword_quality_score(completion.text, prompt.expected_keywords)
             estimated_cost = estimate_cost_usd(
                 completion.input_tokens,
@@ -55,6 +71,10 @@ def run_comparison(
                     latency_ms=completion.latency_ms,
                     estimated_cost_usd=estimated_cost,
                     quality_score=quality_score,
+                    success=True,
+                    status="success",
+                    retry_count=retry_count,
+                    usage_source=completion.usage_source,
                     metadata=metadata,
                 )
             )
@@ -66,6 +86,52 @@ def run_comparison(
         results=results,
         summaries=summaries,
         content_mode=content_mode,
+    )
+
+
+def complete_with_retries(
+    provider: Provider,
+    model: ModelTarget,
+    prompt: PromptCase,
+):
+    attempts = model.max_retries + 1
+    last_error: Exception | None = None
+    timed_out = False
+
+    for attempt in range(attempts):
+        try:
+            completion = provider.complete(model, prompt)
+            return completion, attempt, None, False
+        except Exception as exc:  # noqa: BLE001 - provider adapters normalize later.
+            last_error = exc
+            timed_out = timed_out or is_timeout_error(exc)
+
+    assert last_error is not None
+    return None, max(attempts - 1, 0), sanitize_error(last_error), timed_out
+
+
+def failed_result(
+    model: ModelTarget,
+    prompt: PromptCase,
+    error: str,
+    retry_count: int,
+    timed_out: bool,
+) -> PromptResult:
+    return PromptResult(
+        prompt_id=prompt.id,
+        model_id=model.id,
+        response=None,
+        input_tokens=0,
+        output_tokens=0,
+        latency_ms=0,
+        estimated_cost_usd=0,
+        quality_score=None,
+        success=False,
+        status="timeout" if timed_out else "error",
+        error=error,
+        retry_count=retry_count,
+        timed_out=timed_out,
+        metadata={"provider": model.provider},
     )
 
 
@@ -84,9 +150,13 @@ def summarize_results(results: list[PromptResult]) -> list[ModelSummary]:
 
     summaries: list[ModelSummary] = []
     for model_id, model_results in grouped.items():
+        successful_results = [result for result in model_results if result.success]
+        success_count = len(successful_results)
+        failure_count = len(model_results) - success_count
+        success_rate = success_count / len(model_results) if model_results else 0
         quality_values = [
             result.quality_score
-            for result in model_results
+            for result in successful_results
             if result.quality_score is not None
         ]
         avg_quality = (
@@ -94,18 +164,32 @@ def summarize_results(results: list[PromptResult]) -> list[ModelSummary]:
             if quality_values
             else None
         )
-        avg_latency = sum(result.latency_ms for result in model_results) / len(model_results)
+        avg_latency = (
+            sum(result.latency_ms for result in successful_results) / success_count
+            if successful_results
+            else 0
+        )
+        max_latency = max((result.latency_ms for result in successful_results), default=0)
         total_cost = sum(result.estimated_cost_usd for result in model_results)
         efficiency = efficiency_score(avg_quality, avg_latency, total_cost)
         summaries.append(
             ModelSummary(
                 model_id=model_id,
                 runs=len(model_results),
+                success_count=success_count,
+                failure_count=failure_count,
+                success_rate=success_rate,
                 avg_quality=avg_quality,
                 avg_latency_ms=avg_latency,
+                max_latency_ms=max_latency,
                 total_cost_usd=total_cost,
                 efficiency_score=efficiency,
-                recommendation=recommendation(avg_quality, avg_latency, total_cost),
+                recommendation=recommendation(
+                    avg_quality,
+                    avg_latency,
+                    total_cost,
+                    success_rate,
+                ),
             )
         )
 
@@ -135,7 +219,12 @@ def recommendation(
     avg_quality: float | None,
     avg_latency_ms: float,
     total_cost_usd: float,
+    success_rate: float = 1.0,
 ) -> str:
+    if success_rate == 0:
+        return "Provider failures"
+    if success_rate < 1:
+        return "Review reliability"
     if avg_quality is None:
         return "Needs quality scoring"
     if avg_quality >= 0.95 and total_cost_usd < 0.001:
@@ -145,3 +234,17 @@ def recommendation(
     if avg_quality >= 0.75:
         return "Usable with latency review"
     return "Needs improvement"
+
+
+def sanitize_error(exc: Exception) -> str:
+    message = str(exc).strip()
+    if not message:
+        message = exc.__class__.__name__
+    text = f"{exc.__class__.__name__}: {message}"
+    return text[:300]
+
+
+def is_timeout_error(exc: Exception) -> bool:
+    name = exc.__class__.__name__.lower()
+    message = str(exc).lower()
+    return "timeout" in name or "timed out" in message or "timeout" in message

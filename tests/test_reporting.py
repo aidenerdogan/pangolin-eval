@@ -5,7 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pangolin_eval.models import REPORT_SCHEMA_VERSION, ModelSummary, PromptResult, RunReport
+from pangolin_eval.models import (
+    REPORT_SCHEMA_VERSION,
+    GateResult,
+    ModelSummary,
+    PromptResult,
+    RunReport,
+)
 from pangolin_eval.reporting import render_markdown, write_reports
 
 
@@ -29,8 +35,12 @@ def sample_report() -> RunReport:
             ModelSummary(
                 model_id="mock-model",
                 runs=1,
+                success_count=1,
+                failure_count=0,
+                success_rate=1.0,
                 avg_quality=1.0,
                 avg_latency_ms=123,
+                max_latency_ms=123,
                 total_cost_usd=0.0000012,
                 efficiency_score=0.89,
                 recommendation="Best quality candidate",
@@ -46,9 +56,35 @@ class ReportingTest(unittest.TestCase):
         self.assertIn("# sample", markdown)
         self.assertIn(f"- Schema version: `{REPORT_SCHEMA_VERSION}`", markdown)
         self.assertIn("- Content mode: `full`", markdown)
-        self.assertIn("| mock-model | 1 | 1.00 | 123 | 0.00000120 | 0.89 |", markdown)
+        self.assertIn(
+            "| mock-model | 1 | 1.00 | 1.00 | 123 | 123 | 0.00000120 | 0.89 |",
+            markdown,
+        )
         self.assertIn("### mock-model / case-1", markdown)
+        self.assertIn("- Status: success", markdown)
         self.assertIn("Use the refund policy.", markdown)
+
+    def test_render_markdown_includes_gate_results(self) -> None:
+        report = RunReport(
+            run_name="sample",
+            description="",
+            results=sample_report().results,
+            summaries=sample_report().summaries,
+            gate_results=[
+                GateResult(
+                    name="max_total_cost_usd",
+                    passed=False,
+                    actual=0.2,
+                    threshold=0.1,
+                    comparator="<=",
+                )
+            ],
+        )
+
+        markdown = render_markdown(report)
+
+        self.assertIn("## Gate Results", markdown)
+        self.assertIn("| max_total_cost_usd | fail | 0.200000 | 0.100000 | <= |", markdown)
 
     def test_render_markdown_notes_when_response_content_is_omitted(self) -> None:
         report = sample_report()
@@ -90,7 +126,7 @@ class ReportingTest(unittest.TestCase):
 
     def test_report_schema_file_matches_runtime_version(self) -> None:
         schema = json.loads(
-            Path("schemas/report.v1.json").read_text(encoding="utf-8")
+            Path("schemas/report.v2.json").read_text(encoding="utf-8")
         )
 
         self.assertEqual(

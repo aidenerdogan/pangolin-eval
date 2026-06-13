@@ -7,6 +7,14 @@ from typing import Any
 from pangolin_eval.models import ModelTarget, PromptCase
 
 SUPPORTED_PROVIDERS = {"mock", "openai_compatible"}
+SUPPORTED_GATES = {
+    "max_total_cost_usd",
+    "max_prompt_cost_usd",
+    "max_avg_latency_ms",
+    "max_latency_ms",
+    "min_avg_quality",
+    "min_success_rate",
+}
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
@@ -34,6 +42,8 @@ def validate_config(data: dict[str, Any]) -> None:
     _validate_optional_string(data, "description", "Config")
     _validate_unique_ids(models, "Model")
     _validate_unique_ids(prompts, "Prompt")
+    if "gates" in data:
+        _validate_gates(data["gates"])
 
     for model in models:
         if not isinstance(model, dict):
@@ -70,6 +80,8 @@ def validate_config(data: dict[str, Any]) -> None:
 
         if "mock_latency_ms" in model:
             _require_non_negative_number(model, "mock_latency_ms", f"Model {model_id}")
+        if "max_retries" in model:
+            _require_non_negative_integer(model, "max_retries", f"Model {model_id}")
         if "mock_responses" in model:
             _validate_mock_responses(model["mock_responses"], model_id)
         if provider == "openai_compatible":
@@ -105,6 +117,7 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
         "api_key_env",
         "mock_latency_ms",
         "mock_response",
+        "max_retries",
     }
     for raw in data["models"]:
         extra = {key: value for key, value in raw.items() if key not in known_fields}
@@ -119,6 +132,7 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
                 api_key_env=raw.get("api_key_env"),
                 mock_latency_ms=raw.get("mock_latency_ms"),
                 mock_response=raw.get("mock_response"),
+                max_retries=int(raw.get("max_retries", 0)),
                 extra=extra,
             )
         )
@@ -136,6 +150,11 @@ def parse_prompts(data: dict[str, Any]) -> list[PromptCase]:
             )
         )
     return prompts
+
+
+def parse_gates(data: dict[str, Any]) -> dict[str, float]:
+    gates = data.get("gates", {})
+    return {name: float(value) for name, value in gates.items()}
 
 
 def _required_non_empty_list(
@@ -183,6 +202,33 @@ def _require_non_negative_number(
     if not isinstance(value, (int, float)) or isinstance(value, bool) or value < 0:
         raise ValueError(f"{owner} field '{field}' must be a non-negative number.")
     return float(value)
+
+
+def _require_non_negative_integer(
+    data: dict[str, Any],
+    field: str,
+    owner: str,
+) -> int:
+    value = data.get(field)
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError(f"{owner} field '{field}' must be a non-negative integer.")
+    return value
+
+
+def _validate_gates(value: Any) -> None:
+    if not isinstance(value, dict):
+        raise ValueError("Config field 'gates' must be an object.")
+    for name, threshold in value.items():
+        if name not in SUPPORTED_GATES:
+            supported = ", ".join(sorted(SUPPORTED_GATES))
+            raise ValueError(
+                f"Gate '{name}' is not supported. Supported gates: {supported}."
+            )
+        _require_non_negative_number(value, name, "Config gates")
+        if name in {"min_avg_quality", "min_success_rate"} and value[name] > 1:
+            raise ValueError(
+                f"Config gates field '{name}' must be between 0 and 1."
+            )
 
 
 def _validate_mock_responses(value: Any, model_id: str) -> None:

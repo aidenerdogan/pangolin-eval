@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
-from pangolin_eval.config import load_config, parse_models, parse_prompts
+from pangolin_eval.config import load_config, parse_gates, parse_models, parse_prompts
+from pangolin_eval.gates import evaluate_gates, gates_passed
 from pangolin_eval.reporting import write_reports
 from pangolin_eval.runner import run_comparison
 
@@ -76,9 +78,15 @@ def run_command(config_path: Path, out_dir: Path, content_mode: str = "full") ->
         prompts=parse_prompts(config),
         content_mode=normalized_content_mode,
     )
+    gate_results = evaluate_gates(report, parse_gates(config))
+    if gate_results:
+        report = replace(report, gate_results=gate_results)
     json_path, markdown_path = write_reports(report, out_dir)
     print(f"Wrote JSON report: {json_path}")
     print(f"Wrote Markdown report: {markdown_path}")
+    if gate_results and not gates_passed(gate_results):
+        print("One or more gates failed.", file=sys.stderr)
+        return 3
     return 0
 
 

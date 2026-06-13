@@ -52,6 +52,7 @@ class OpenAICompatibleProvider(Provider):
         data = json.loads(raw)
         text = data["choices"][0]["message"]["content"]
         usage = data.get("usage", {})
+        usage_source = "provider" if usage else "estimated"
 
         return Completion(
             text=text,
@@ -63,4 +64,5 @@ class OpenAICompatibleProvider(Provider):
                 "api_model": model.api_model or model.id,
                 "usage": usage,
             },
+            usage_source=usage_source,
         )

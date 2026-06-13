@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 
-from pangolin_eval.config import parse_models, validate_config
+from pangolin_eval.config import parse_gates, parse_models, validate_config
 
 
 def valid_config() -> dict[str, object]:
@@ -41,6 +41,28 @@ class ConfigValidationTest(unittest.TestCase):
         self.assertEqual(models[0].mock_latency_ms, 25)
         self.assertEqual(models[0].extra["mock_responses"]["case-1"], "refund policy")
 
+    def test_parse_models_preserves_retry_config(self) -> None:
+        data = valid_config()
+        data["models"][0]["max_retries"] = 2
+
+        models = parse_models(data)
+
+        self.assertEqual(models[0].max_retries, 2)
+
+    def test_parse_gates_returns_thresholds(self) -> None:
+        data = valid_config()
+        data["gates"] = {
+            "max_total_cost_usd": 0.01,
+            "min_success_rate": 1.0,
+        }
+
+        validate_config(data)
+
+        self.assertEqual(
+            parse_gates(data),
+            {"max_total_cost_usd": 0.01, "min_success_rate": 1.0},
+        )
+
     def test_rejects_duplicate_model_ids(self) -> None:
         data = valid_config()
         data["models"] = copy.deepcopy(data["models"]) + copy.deepcopy(data["models"])
@@ -69,6 +91,27 @@ class ConfigValidationTest(unittest.TestCase):
         }
 
         with self.assertRaisesRegex(ValueError, "field 'api_key_env'"):
+            validate_config(data)
+
+    def test_rejects_negative_max_retries(self) -> None:
+        data = valid_config()
+        data["models"][0]["max_retries"] = -1
+
+        with self.assertRaisesRegex(ValueError, "max_retries"):
+            validate_config(data)
+
+    def test_rejects_unknown_gate(self) -> None:
+        data = valid_config()
+        data["gates"] = {"max_surprise": 1}
+
+        with self.assertRaisesRegex(ValueError, "Gate 'max_surprise' is not supported"):
+            validate_config(data)
+
+    def test_rejects_probability_gate_above_one(self) -> None:
+        data = valid_config()
+        data["gates"] = {"min_success_rate": 1.1}
+
+        with self.assertRaisesRegex(ValueError, "between 0 and 1"):
             validate_config(data)
 
 

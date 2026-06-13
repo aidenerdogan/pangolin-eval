@@ -100,10 +100,10 @@ Version 0.1 focuses on the smallest useful artifact:
 
 JSON reports declare a schema version and content mode:
 
-- `schema_version`: currently `pangolin-eval.report.v1`
+- `schema_version`: currently `pangolin-eval.report.v2`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md) and [schemas/report.v1.json](schemas/report.v1.json).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md) and [schemas/report.v2.json](schemas/report.v2.json).
 
 ## Open-Core Direction
 

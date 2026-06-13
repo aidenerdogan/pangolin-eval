@@ -37,12 +37,32 @@ def render_markdown(report: RunReport) -> str:
         [
             "## Model Summary",
             "",
-            "| Model | Runs | Avg quality | Avg latency ms | Estimated cost USD | Efficiency | Recommendation |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
+            "| Model | Runs | Success rate | Avg quality | Avg latency ms | Max latency ms | Estimated cost USD | Efficiency | Recommendation |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
         ]
     )
     for summary in report.summaries:
         lines.append(render_summary_row(summary))
+
+    if report.gate_results:
+        lines.extend(
+            [
+                "",
+                "## Gate Results",
+                "",
+                "| Gate | Result | Actual | Threshold | Rule |",
+                "| --- | --- | ---: | ---: | --- |",
+            ]
+        )
+        for gate_result in report.gate_results:
+            result = "pass" if gate_result.passed else "fail"
+            lines.append(
+                f"| {gate_result.name} "
+                f"| {result} "
+                f"| {gate_result.actual:.6f} "
+                f"| {gate_result.threshold:.6f} "
+                f"| {gate_result.comparator} |"
+            )
 
     lines.extend(["", "## Prompt Results", ""])
     for result in report.results:
@@ -51,14 +71,18 @@ def render_markdown(report: RunReport) -> str:
             [
                 f"### {result.model_id} / {result.prompt_id}",
                 "",
+                f"- Status: {result.status}",
                 f"- Quality score: {quality}",
                 f"- Latency: {result.latency_ms} ms",
                 f"- Input tokens: {result.input_tokens}",
                 f"- Output tokens: {result.output_tokens}",
                 f"- Estimated cost: ${result.estimated_cost_usd:.8f}",
+                f"- Retries: {result.retry_count}",
                 "",
             ]
         )
+        if result.error:
+            lines.extend([f"- Error: {result.error}", ""])
         if result.response is None:
             lines.extend(
                 [
@@ -84,8 +108,10 @@ def render_summary_row(summary: ModelSummary) -> str:
     return (
         f"| {summary.model_id} "
         f"| {summary.runs} "
+        f"| {summary.success_rate:.2f} "
         f"| {avg_quality} "
         f"| {summary.avg_latency_ms:.0f} "
+        f"| {summary.max_latency_ms:.0f} "
         f"| {summary.total_cost_usd:.8f} "
         f"| {efficiency} "
         f"| {summary.recommendation} |"

@@ -5,7 +5,7 @@ from typing import Any
 
 
 Message = dict[str, str]
-REPORT_SCHEMA_VERSION = "pangolin-eval.report.v1"
+REPORT_SCHEMA_VERSION = "pangolin-eval.report.v2"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
 
 
@@ -27,6 +27,7 @@ class ModelTarget:
     api_key_env: str | None = None
     mock_latency_ms: int | None = None
     mock_response: str | None = None
+    max_retries: int = 0
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -37,6 +38,7 @@ class Completion:
     output_tokens: int
     latency_ms: int
     metadata: dict[str, Any] = field(default_factory=dict)
+    usage_source: str = "estimated"
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,12 @@ class PromptResult:
     latency_ms: int
     estimated_cost_usd: float
     quality_score: float | None
+    success: bool = True
+    status: str = "success"
+    error: str | None = None
+    retry_count: int = 0
+    timed_out: bool = False
+    usage_source: str = "estimated"
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -56,11 +64,26 @@ class PromptResult:
 class ModelSummary:
     model_id: str
     runs: int
+    success_count: int
+    failure_count: int
+    success_rate: float
     avg_quality: float | None
     avg_latency_ms: float
+    max_latency_ms: int
     total_cost_usd: float
     efficiency_score: float | None
     recommendation: str
+
+
+@dataclass(frozen=True)
+class GateResult:
+    name: str
+    passed: bool
+    actual: float
+    threshold: float
+    comparator: str
+    scope: str = "run"
+    message: str = ""
 
 
 @dataclass(frozen=True)
@@ -69,5 +92,6 @@ class RunReport:
     description: str
     results: list[PromptResult]
     summaries: list[ModelSummary]
+    gate_results: list[GateResult] = field(default_factory=list)
     schema_version: str = REPORT_SCHEMA_VERSION
     content_mode: str = "full"
