@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from pangolin_eval.aggregation import summarize_aggregations
 from pangolin_eval.models import (
     SUPPORTED_CONTENT_MODES,
     ModelSummary,
@@ -75,16 +76,27 @@ def run_comparison(
                     status="success",
                     retry_count=retry_count,
                     usage_source=completion.usage_source,
+                    model_group=model.model_group,
+                    feature=prompt.feature,
+                    workflow=prompt.workflow,
+                    environment=prompt.environment,
+                    prompt_version=prompt.prompt_version,
+                    customer_user_hash=prompt.customer_user_hash,
+                    pricing_source=model.pricing_source,
+                    pricing_source_url=model.pricing_source_url,
+                    pricing_updated_at=model.pricing_updated_at,
                     metadata=metadata,
                 )
             )
 
     summaries = summarize_results(results)
+    aggregations = summarize_aggregations(results)
     return RunReport(
         run_name=run_name,
         description=description,
         results=results,
         summaries=summaries,
+        aggregations=aggregations,
         content_mode=content_mode,
     )
 
@@ -131,6 +143,15 @@ def failed_result(
         error=error,
         retry_count=retry_count,
         timed_out=timed_out,
+        model_group=model.model_group,
+        feature=prompt.feature,
+        workflow=prompt.workflow,
+        environment=prompt.environment,
+        prompt_version=prompt.prompt_version,
+        customer_user_hash=prompt.customer_user_hash,
+        pricing_source=model.pricing_source,
+        pricing_source_url=model.pricing_source_url,
+        pricing_updated_at=model.pricing_updated_at,
         metadata={"provider": model.provider},
     )
 

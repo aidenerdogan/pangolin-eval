@@ -19,6 +19,8 @@ class RunnerTest(unittest.TestCase):
                     output_price_per_1m=0.2,
                     mock_response="refund policy order escalate",
                     mock_latency_ms=100,
+                    model_group="small",
+                    pricing_source="example_catalog",
                 )
             ],
             prompts=[
@@ -26,6 +28,10 @@ class RunnerTest(unittest.TestCase):
                     id="case-1",
                     messages=[{"role": "user", "content": "What should support do?"}],
                     expected_keywords=["refund", "policy", "order", "escalate"],
+                    feature="support",
+                    workflow="refund",
+                    environment="test",
+                    prompt_version="v1",
                 )
             ],
         )
@@ -37,6 +43,16 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(report.summaries[0].avg_quality, 1.0)
         self.assertEqual(report.summaries[0].success_rate, 1.0)
         self.assertEqual(report.summaries[0].recommendation, "Best quality candidate")
+        self.assertEqual(report.results[0].feature, "support")
+        self.assertEqual(report.results[0].workflow, "refund")
+        self.assertEqual(report.results[0].model_group, "small")
+        self.assertEqual(report.results[0].pricing_source, "example_catalog")
+        self.assertTrue(
+            any(
+                aggregation.group_by == "feature" and aggregation.key == "support"
+                for aggregation in report.aggregations
+            )
+        )
 
     def test_metadata_only_mode_omits_response_content_but_keeps_score(self) -> None:
         report = run_comparison(

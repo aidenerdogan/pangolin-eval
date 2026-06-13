@@ -1,10 +1,12 @@
 {
   "run_name": "simple-model-compare",
   "description": "Compare three mock LLM choices on a small customer-support style task.",
+  "pricing_catalog": "pricing_catalog.json",
   "models": [
     {
       "id": "fast-cheap",
       "provider": "mock",
+      "model_group": "small",
       "input_price_per_1m": 0.15,
       "output_price_per_1m": 0.6,
       "mock_latency_ms": 180,
@@ -16,6 +18,7 @@
     {
       "id": "balanced",
       "provider": "mock",
+      "model_group": "medium",
       "input_price_per_1m": 0.6,
       "output_price_per_1m": 2.0,
       "mock_latency_ms": 320,
@@ -27,6 +30,7 @@
     {
       "id": "strong-expensive",
       "provider": "mock",
+      "model_group": "large",
       "input_price_per_1m": 2.5,
       "output_price_per_1m": 10.0,
       "mock_latency_ms": 540,
@@ -39,6 +43,10 @@
   "prompts": [
     {
       "id": "refund-policy",
+      "feature": "support",
+      "workflow": "refund-assistance",
+      "environment": "demo",
+      "prompt_version": "support-v1",
       "messages": [
         {
           "role": "system",
@@ -53,6 +61,10 @@
     },
     {
       "id": "cost-summary",
+      "feature": "product-ops",
+      "workflow": "cost-education",
+      "environment": "demo",
+      "prompt_version": "ops-v1",
       "messages": [
         {
           "role": "system",

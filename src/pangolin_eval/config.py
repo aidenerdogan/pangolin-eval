@@ -40,6 +40,7 @@ def validate_config(data: dict[str, Any]) -> None:
 
     _validate_optional_string(data, "run_name", "Config")
     _validate_optional_string(data, "description", "Config")
+    _validate_optional_string(data, "pricing_catalog", "Config")
     _validate_unique_ids(models, "Model")
     _validate_unique_ids(prompts, "Prompt")
     if "gates" in data:
@@ -77,11 +78,17 @@ def validate_config(data: dict[str, Any]) -> None:
         _validate_optional_string(model, "base_url", f"Model {model_id}")
         _validate_optional_string(model, "api_key_env", f"Model {model_id}")
         _validate_optional_string(model, "mock_response", f"Model {model_id}")
+        _validate_optional_string(model, "model_group", f"Model {model_id}")
+        _validate_optional_string(model, "pricing_source", f"Model {model_id}")
+        _validate_optional_string(model, "pricing_source_url", f"Model {model_id}")
+        _validate_optional_string(model, "pricing_updated_at", f"Model {model_id}")
 
         if "mock_latency_ms" in model:
             _require_non_negative_number(model, "mock_latency_ms", f"Model {model_id}")
         if "max_retries" in model:
             _require_non_negative_integer(model, "max_retries", f"Model {model_id}")
+        if "price_override" in model:
+            _require_bool(model, "price_override", f"Model {model_id}")
         if "mock_responses" in model:
             _validate_mock_responses(model["mock_responses"], model_id)
         if provider == "openai_compatible":
@@ -103,6 +110,14 @@ def validate_config(data: dict[str, Any]) -> None:
                 "expected_keywords",
                 f"Prompt {prompt_id}",
             )
+        for field in [
+            "feature",
+            "workflow",
+            "environment",
+            "prompt_version",
+            "customer_user_hash",
+        ]:
+            _validate_optional_string(prompt, field, f"Prompt {prompt_id}")
 
 
 def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
@@ -118,6 +133,10 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
         "mock_latency_ms",
         "mock_response",
         "max_retries",
+        "model_group",
+        "pricing_source",
+        "pricing_source_url",
+        "pricing_updated_at",
     }
     for raw in data["models"]:
         extra = {key: value for key, value in raw.items() if key not in known_fields}
@@ -133,6 +152,10 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
                 mock_latency_ms=raw.get("mock_latency_ms"),
                 mock_response=raw.get("mock_response"),
                 max_retries=int(raw.get("max_retries", 0)),
+                model_group=raw.get("model_group"),
+                pricing_source=raw.get("pricing_source", "manual"),
+                pricing_source_url=raw.get("pricing_source_url"),
+                pricing_updated_at=raw.get("pricing_updated_at"),
                 extra=extra,
             )
         )
@@ -147,6 +170,11 @@ def parse_prompts(data: dict[str, Any]) -> list[PromptCase]:
                 id=raw["id"],
                 messages=raw["messages"],
                 expected_keywords=list(raw.get("expected_keywords", [])),
+                feature=raw.get("feature"),
+                workflow=raw.get("workflow"),
+                environment=raw.get("environment"),
+                prompt_version=raw.get("prompt_version"),
+                customer_user_hash=raw.get("customer_user_hash"),
             )
         )
     return prompts
@@ -212,6 +240,13 @@ def _require_non_negative_integer(
     value = data.get(field)
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
         raise ValueError(f"{owner} field '{field}' must be a non-negative integer.")
+    return value
+
+
+def _require_bool(data: dict[str, Any], field: str, owner: str) -> bool:
+    value = data.get(field)
+    if not isinstance(value, bool):
+        raise ValueError(f"{owner} field '{field}' must be a boolean.")
     return value
 
 

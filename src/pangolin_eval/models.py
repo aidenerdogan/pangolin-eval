@@ -5,7 +5,7 @@ from typing import Any
 
 
 Message = dict[str, str]
-REPORT_SCHEMA_VERSION = "pangolin-eval.report.v2"
+REPORT_SCHEMA_VERSION = "pangolin-eval.report.v3"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
 
 
@@ -14,6 +14,11 @@ class PromptCase:
     id: str
     messages: list[Message]
     expected_keywords: list[str] = field(default_factory=list)
+    feature: str | None = None
+    workflow: str | None = None
+    environment: str | None = None
+    prompt_version: str | None = None
+    customer_user_hash: str | None = None
 
 
 @dataclass(frozen=True)
@@ -28,6 +33,10 @@ class ModelTarget:
     mock_latency_ms: int | None = None
     mock_response: str | None = None
     max_retries: int = 0
+    model_group: str | None = None
+    pricing_source: str = "manual"
+    pricing_source_url: str | None = None
+    pricing_updated_at: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -57,6 +66,15 @@ class PromptResult:
     retry_count: int = 0
     timed_out: bool = False
     usage_source: str = "estimated"
+    model_group: str | None = None
+    feature: str | None = None
+    workflow: str | None = None
+    environment: str | None = None
+    prompt_version: str | None = None
+    customer_user_hash: str | None = None
+    pricing_source: str = "manual"
+    pricing_source_url: str | None = None
+    pricing_updated_at: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -87,11 +105,25 @@ class GateResult:
 
 
 @dataclass(frozen=True)
+class AggregationSummary:
+    group_by: str
+    key: str
+    runs: int
+    success_count: int
+    failure_count: int
+    success_rate: float
+    avg_quality: float | None
+    avg_latency_ms: float
+    total_cost_usd: float
+
+
+@dataclass(frozen=True)
 class RunReport:
     run_name: str
     description: str
     results: list[PromptResult]
     summaries: list[ModelSummary]
     gate_results: list[GateResult] = field(default_factory=list)
+    aggregations: list[AggregationSummary] = field(default_factory=list)
     schema_version: str = REPORT_SCHEMA_VERSION
     content_mode: str = "full"

@@ -126,7 +126,7 @@ class ReportingTest(unittest.TestCase):
 
     def test_report_schema_file_matches_runtime_version(self) -> None:
         schema = json.loads(
-            Path("schemas/report.v2.json").read_text(encoding="utf-8")
+            Path("schemas/report.v3.json").read_text(encoding="utf-8")
         )
 
         self.assertEqual(

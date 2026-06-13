@@ -1,0 +1,29 @@
+{
+  "schema_version": "pangolin-eval.pricing.v1",
+  "models": [
+    {
+      "id": "fast-cheap",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "source": "example_catalog",
+      "source_url": "https://example.com/pangolin-eval/pricing",
+      "last_updated": "2026-06-13"
+    },
+    {
+      "id": "balanced",
+      "input_price_per_1m": 0.6,
+      "output_price_per_1m": 2.0,
+      "source": "example_catalog",
+      "source_url": "https://example.com/pangolin-eval/pricing",
+      "last_updated": "2026-06-13"
+    },
+    {
+      "id": "strong-expensive",
+      "input_price_per_1m": 2.5,
+      "output_price_per_1m": 10.0,
+      "source": "example_catalog",
+      "source_url": "https://example.com/pangolin-eval/pricing",
+      "last_updated": "2026-06-13"
+    }
+  ]
+}

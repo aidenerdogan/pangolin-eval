@@ -64,6 +64,27 @@ def render_markdown(report: RunReport) -> str:
                 f"| {gate_result.comparator} |"
             )
 
+    if report.aggregations:
+        lines.extend(
+            [
+                "",
+                "## Attribution Summary",
+                "",
+                "| Group by | Key | Runs | Success rate | Avg quality | Avg latency ms | Estimated cost USD |",
+                "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for aggregation in report.aggregations[:25]:
+            lines.append(
+                f"| {aggregation.group_by} "
+                f"| {aggregation.key} "
+                f"| {aggregation.runs} "
+                f"| {aggregation.success_rate:.2f} "
+                f"| {format_optional_float(aggregation.avg_quality)} "
+                f"| {aggregation.avg_latency_ms:.0f} "
+                f"| {aggregation.total_cost_usd:.8f} |"
+            )
+
     lines.extend(["", "## Prompt Results", ""])
     for result in report.results:
         quality = format_optional_float(result.quality_score)

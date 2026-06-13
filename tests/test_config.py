@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 
-from pangolin_eval.config import parse_gates, parse_models, validate_config
+from pangolin_eval.config import parse_gates, parse_models, parse_prompts, validate_config
 
 
 def valid_config() -> dict[str, object]:
@@ -48,6 +48,35 @@ class ConfigValidationTest(unittest.TestCase):
         models = parse_models(data)
 
         self.assertEqual(models[0].max_retries, 2)
+
+    def test_parse_models_preserves_group_and_pricing_provenance(self) -> None:
+        data = valid_config()
+        data["models"][0]["model_group"] = "small"
+        data["models"][0]["pricing_source"] = "catalog"
+        data["models"][0]["pricing_source_url"] = "https://example.test/pricing"
+        data["models"][0]["pricing_updated_at"] = "2026-06-13"
+        data["models"][0]["price_override"] = True
+
+        validate_config(data)
+        models = parse_models(data)
+
+        self.assertEqual(models[0].model_group, "small")
+        self.assertEqual(models[0].pricing_source, "catalog")
+        self.assertTrue(models[0].extra["price_override"])
+
+    def test_parse_prompts_preserves_attribution_fields(self) -> None:
+        data = valid_config()
+        data["prompts"][0]["feature"] = "support"
+        data["prompts"][0]["workflow"] = "refund"
+        data["prompts"][0]["environment"] = "test"
+        data["prompts"][0]["prompt_version"] = "v1"
+        data["prompts"][0]["customer_user_hash"] = "user-hash"
+
+        prompts = parse_prompts(data)
+
+        self.assertEqual(prompts[0].feature, "support")
+        self.assertEqual(prompts[0].workflow, "refund")
+        self.assertEqual(prompts[0].customer_user_hash, "user-hash")
 
     def test_parse_gates_returns_thresholds(self) -> None:
         data = valid_config()

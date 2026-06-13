@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pangolin_eval.config import load_config, parse_gates, parse_models, parse_prompts
 from pangolin_eval.gates import evaluate_gates, gates_passed
+from pangolin_eval.pricing import apply_pricing_catalog, load_pricing_catalog
 from pangolin_eval.reporting import write_reports
 from pangolin_eval.runner import run_comparison
 
@@ -71,10 +72,14 @@ def main(argv: list[str] | None = None) -> int:
 def run_command(config_path: Path, out_dir: Path, content_mode: str = "full") -> int:
     config = load_config(config_path)
     normalized_content_mode = content_mode.replace("-", "_")
+    models = parse_models(config)
+    if "pricing_catalog" in config:
+        catalog_path = config_path.parent / config["pricing_catalog"]
+        models = apply_pricing_catalog(models, load_pricing_catalog(catalog_path))
     report = run_comparison(
         run_name=config.get("run_name", config_path.stem),
         description=config.get("description", ""),
-        models=parse_models(config),
+        models=models,
         prompts=parse_prompts(config),
         content_mode=normalized_content_mode,
     )

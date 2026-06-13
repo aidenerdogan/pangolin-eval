@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aidenerdogan/pangolin-eval/schemas/pricing-catalog.v1.json",
+  "title": "PangolinEval Pricing Catalog v1",
+  "type": "object",
+  "required": ["schema_version", "models"],
+  "properties": {
+    "schema_version": {
+      "const": "pangolin-eval.pricing.v1"
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "input_price_per_1m",
+          "output_price_per_1m",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "input_price_per_1m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "output_price_per_1m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "source": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "last_updated": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

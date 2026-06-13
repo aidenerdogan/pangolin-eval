@@ -75,6 +75,7 @@ class CliTest(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
+            config.pop("pricing_catalog", None)
             config["gates"] = {"max_total_cost_usd": 0.000001}
             config_path.write_text(json.dumps(config), encoding="utf-8")
             stderr = io.StringIO()

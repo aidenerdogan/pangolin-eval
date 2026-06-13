@@ -5,11 +5,11 @@ PangolinEval writes a versioned JSON report at `report.json`.
 Current schema:
 
 ```text
-schemas/report.v2.json
-schema_version: pangolin-eval.report.v2
+schemas/report.v3.json
+schema_version: pangolin-eval.report.v3
 ```
 
-`schemas/report.v1.json` is kept for older reports.
+`schemas/report.v1.json` and `schemas/report.v2.json` are kept for older reports.
 
 ## Content Modes
 
@@ -36,6 +36,20 @@ pangolin-eval run \
 - Token counts, latency, estimated cost, quality score, reliability fields, gate results, and provider metadata remain available in both modes.
 - Prompt messages are not written to reports in the current schema.
 - `usage_source` distinguishes provider-reported usage from estimated usage.
+- Prompt results can include attribution fields: `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`.
+- Pricing provenance fields include `pricing_source`, `pricing_source_url`, and `pricing_updated_at`.
+- `aggregations` summarizes cost, quality, latency, and reliability by model, prompt, feature, workflow, environment, prompt version, and model group.
 - Provider `metadata` is intentionally extensible because usage fields vary across APIs.
 
-Future schema versions will add attribution, pricing provenance, RAG metrics, and agent TraceCards.
+## Pricing Catalog
+
+Optional pricing catalogs use:
+
+```text
+schemas/pricing-catalog.v1.json
+schema_version: pangolin-eval.pricing.v1
+```
+
+Set `pricing_catalog` in a config file to load catalog prices and provenance. Add `price_override: true` on a model entry to keep model-level prices instead of applying the catalog.
+
+Future schema versions will add RAG metrics and agent TraceCards.
