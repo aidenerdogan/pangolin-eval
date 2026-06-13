@@ -12,6 +12,7 @@ from pangolin_eval.models import (
     RunReport,
 )
 from pangolin_eval.providers import MockProvider, OpenAICompatibleProvider, Provider
+from pangolin_eval.recommendations import generate_recommendations
 from pangolin_eval.scoring import estimate_cost_usd, keyword_quality_score
 
 
@@ -91,13 +92,23 @@ def run_comparison(
 
     summaries = summarize_results(results)
     aggregations = summarize_aggregations(results)
-    return RunReport(
+    report = RunReport(
         run_name=run_name,
         description=description,
         results=results,
         summaries=summaries,
         aggregations=aggregations,
         content_mode=content_mode,
+    )
+    return RunReport(
+        run_name=report.run_name,
+        description=report.description,
+        results=report.results,
+        summaries=report.summaries,
+        gate_results=report.gate_results,
+        aggregations=report.aggregations,
+        recommendations=generate_recommendations(report),
+        content_mode=report.content_mode,
     )
 
 

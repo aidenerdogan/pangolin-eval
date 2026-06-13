@@ -5,11 +5,11 @@ PangolinEval writes a versioned JSON report at `report.json`.
 Current schema:
 
 ```text
-schemas/report.v3.json
-schema_version: pangolin-eval.report.v3
+schemas/report.v4.json
+schema_version: pangolin-eval.report.v4
 ```
 
-`schemas/report.v1.json` and `schemas/report.v2.json` are kept for older reports.
+Older report schemas are kept for compatibility.
 
 ## Content Modes
 
@@ -39,6 +39,7 @@ pangolin-eval run \
 - Prompt results can include attribution fields: `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`.
 - Pricing provenance fields include `pricing_source`, `pricing_source_url`, and `pricing_updated_at`.
 - `aggregations` summarizes cost, quality, latency, and reliability by model, prompt, feature, workflow, environment, prompt version, and model group.
+- `recommendations` contains auditable rule-based suggestions for model switches, context trimming, max-token caps, caching, and fallback review.
 - Provider `metadata` is intentionally extensible because usage fields vary across APIs.
 
 ## Pricing Catalog

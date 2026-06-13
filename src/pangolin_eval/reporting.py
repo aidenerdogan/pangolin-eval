@@ -118,6 +118,31 @@ def render_markdown(report: RunReport) -> str:
                 f"| {aggregation.total_cost_usd:.8f} |"
             )
 
+    if report.recommendations:
+        lines.extend(
+            [
+                "",
+                "## Recommendations",
+                "",
+                "| Category | Recommendation | Risk | Confidence | Evidence | Savings USD |",
+                "| --- | --- | --- | --- | --- | ---: |",
+            ]
+        )
+        for recommendation in report.recommendations:
+            savings = (
+                f"{recommendation.expected_savings_usd:.8f}"
+                if recommendation.expected_savings_usd is not None
+                else "n/a"
+            )
+            lines.append(
+                f"| {recommendation.category} "
+                f"| {recommendation.title} "
+                f"| {recommendation.quality_risk} "
+                f"| {recommendation.confidence} "
+                f"| {recommendation.evidence} "
+                f"| {savings} |"
+            )
+
     lines.extend(["", "## Prompt Results", ""])
     for result in report.results:
         quality = format_optional_float(result.quality_score)

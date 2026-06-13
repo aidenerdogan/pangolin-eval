@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aidenerdogan/pangolin-eval/schemas/report.v4.json",
+  "title": "PangolinEval Report v4",
+  "type": "object",
+  "required": [
+    "run_name",
+    "description",
+    "results",
+    "summaries",
+    "gate_results",
+    "aggregations",
+    "recommendations",
+    "schema_version",
+    "content_mode"
+  ],
+  "properties": {
+    "run_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "pangolin-eval.report.v4"
+    },
+    "content_mode": {
+      "enum": ["full", "metadata_only"]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "summaries": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "gate_results": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "aggregations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/recommendation"
+      }
+    }
+  },
+  "$defs": {
+    "recommendation": {
+      "type": "object",
+      "required": [
+        "id",
+        "category",
+        "title",
+        "evidence",
+        "expected_savings_usd",
+        "quality_risk",
+        "confidence",
+        "affected_models",
+        "affected_prompts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "model_switch",
+            "context_trimming",
+            "max_token_cap",
+            "caching",
+            "fallback_review"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "expected_savings_usd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "quality_risk": {
+          "enum": ["low", "medium", "high"]
+        },
+        "confidence": {
+          "enum": ["low", "medium", "high"]
+        },
+        "affected_models": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "affected_prompts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

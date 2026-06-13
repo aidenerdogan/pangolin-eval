@@ -12,6 +12,7 @@ from pangolin_eval.models import (
     PromptResult,
     RagReport,
     RagResult,
+    Recommendation,
     RunReport,
     TraceCard,
     TraceCardReport,
@@ -96,6 +97,30 @@ class ReportingTest(unittest.TestCase):
         self.assertIn("## Gate Results", markdown)
         self.assertIn("| max_total_cost_usd | fail | 0.200000 | 0.100000 | <= |", markdown)
 
+    def test_render_markdown_includes_recommendations(self) -> None:
+        report = RunReport(
+            run_name="sample",
+            description="",
+            results=sample_report().results,
+            summaries=sample_report().summaries,
+            recommendations=[
+                Recommendation(
+                    id="cache",
+                    category="caching",
+                    title="Review caching",
+                    evidence="Repeated prompt ids.",
+                    expected_savings_usd=None,
+                    quality_risk="low",
+                    confidence="low",
+                )
+            ],
+        )
+
+        markdown = render_markdown(report)
+
+        self.assertIn("## Recommendations", markdown)
+        self.assertIn("| caching | Review caching |", markdown)
+
     def test_render_markdown_notes_when_response_content_is_omitted(self) -> None:
         report = sample_report()
         report.results[0] = PromptResult(
@@ -136,7 +161,7 @@ class ReportingTest(unittest.TestCase):
 
     def test_report_schema_file_matches_runtime_version(self) -> None:
         schema = json.loads(
-            Path("schemas/report.v3.json").read_text(encoding="utf-8")
+            Path("schemas/report.v4.json").read_text(encoding="utf-8")
         )
 
         self.assertEqual(

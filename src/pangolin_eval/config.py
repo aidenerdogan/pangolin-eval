@@ -82,13 +82,28 @@ def validate_config(data: dict[str, Any]) -> None:
         _validate_optional_string(model, "pricing_source", f"Model {model_id}")
         _validate_optional_string(model, "pricing_source_url", f"Model {model_id}")
         _validate_optional_string(model, "pricing_updated_at", f"Model {model_id}")
+        _validate_optional_string(model, "latency_band", f"Model {model_id}")
 
         if "mock_latency_ms" in model:
             _require_non_negative_number(model, "mock_latency_ms", f"Model {model_id}")
         if "max_retries" in model:
             _require_non_negative_integer(model, "max_retries", f"Model {model_id}")
+        if "context_window_tokens" in model:
+            _require_non_negative_integer(
+                model,
+                "context_window_tokens",
+                f"Model {model_id}",
+            )
         if "price_override" in model:
             _require_bool(model, "price_override", f"Model {model_id}")
+        for field in [
+            "supports_tools",
+            "supports_structured_output",
+            "supports_json_mode",
+            "supports_multimodal",
+        ]:
+            if field in model:
+                _require_bool(model, field, f"Model {model_id}")
         if "mock_responses" in model:
             _validate_mock_responses(model["mock_responses"], model_id)
         if provider == "openai_compatible":
@@ -137,6 +152,12 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
         "pricing_source",
         "pricing_source_url",
         "pricing_updated_at",
+        "context_window_tokens",
+        "supports_tools",
+        "supports_structured_output",
+        "supports_json_mode",
+        "supports_multimodal",
+        "latency_band",
     }
     for raw in data["models"]:
         extra = {key: value for key, value in raw.items() if key not in known_fields}
@@ -156,6 +177,12 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
                 pricing_source=raw.get("pricing_source", "manual"),
                 pricing_source_url=raw.get("pricing_source_url"),
                 pricing_updated_at=raw.get("pricing_updated_at"),
+                context_window_tokens=raw.get("context_window_tokens"),
+                supports_tools=bool(raw.get("supports_tools", False)),
+                supports_structured_output=bool(raw.get("supports_structured_output", False)),
+                supports_json_mode=bool(raw.get("supports_json_mode", False)),
+                supports_multimodal=bool(raw.get("supports_multimodal", False)),
+                latency_band=raw.get("latency_band"),
                 extra=extra,
             )
         )

@@ -5,7 +5,7 @@ from typing import Any
 
 
 Message = dict[str, str]
-REPORT_SCHEMA_VERSION = "pangolin-eval.report.v3"
+REPORT_SCHEMA_VERSION = "pangolin-eval.report.v4"
 RAG_REPORT_SCHEMA_VERSION = "pangolin-eval.rag_report.v1"
 TRACECARD_SCHEMA_VERSION = "pangolin-eval.tracecards.v1"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
@@ -39,6 +39,12 @@ class ModelTarget:
     pricing_source: str = "manual"
     pricing_source_url: str | None = None
     pricing_updated_at: str | None = None
+    context_window_tokens: int | None = None
+    supports_tools: bool = False
+    supports_structured_output: bool = False
+    supports_json_mode: bool = False
+    supports_multimodal: bool = False
+    latency_band: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -120,6 +126,19 @@ class AggregationSummary:
 
 
 @dataclass(frozen=True)
+class Recommendation:
+    id: str
+    category: str
+    title: str
+    evidence: str
+    expected_savings_usd: float | None
+    quality_risk: str
+    confidence: str
+    affected_models: list[str] = field(default_factory=list)
+    affected_prompts: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class RunReport:
     run_name: str
     description: str
@@ -127,6 +146,7 @@ class RunReport:
     summaries: list[ModelSummary]
     gate_results: list[GateResult] = field(default_factory=list)
     aggregations: list[AggregationSummary] = field(default_factory=list)
+    recommendations: list[Recommendation] = field(default_factory=list)
     schema_version: str = REPORT_SCHEMA_VERSION
     content_mode: str = "full"
 

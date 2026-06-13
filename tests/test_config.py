@@ -56,6 +56,10 @@ class ConfigValidationTest(unittest.TestCase):
         data["models"][0]["pricing_source_url"] = "https://example.test/pricing"
         data["models"][0]["pricing_updated_at"] = "2026-06-13"
         data["models"][0]["price_override"] = True
+        data["models"][0]["context_window_tokens"] = 8192
+        data["models"][0]["supports_tools"] = True
+        data["models"][0]["supports_json_mode"] = True
+        data["models"][0]["latency_band"] = "low"
 
         validate_config(data)
         models = parse_models(data)
@@ -63,6 +67,10 @@ class ConfigValidationTest(unittest.TestCase):
         self.assertEqual(models[0].model_group, "small")
         self.assertEqual(models[0].pricing_source, "catalog")
         self.assertTrue(models[0].extra["price_override"])
+        self.assertEqual(models[0].context_window_tokens, 8192)
+        self.assertTrue(models[0].supports_tools)
+        self.assertTrue(models[0].supports_json_mode)
+        self.assertEqual(models[0].latency_band, "low")
 
     def test_parse_prompts_preserves_attribution_fields(self) -> None:
         data = valid_config()

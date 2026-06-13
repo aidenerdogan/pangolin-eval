@@ -105,6 +105,7 @@ Version 0.1 focuses on the smallest useful artifact:
 - metadata-only report mode for privacy-conscious runs
 - synthetic RAG evaluation CLI and report
 - local agent/workflow TraceCards
+- auditable recommendations-lite
 
 ## Planned Scope
 
@@ -120,10 +121,10 @@ Version 0.1 focuses on the smallest useful artifact:
 
 JSON reports declare a schema version and content mode:
 
-- `schema_version`: currently `pangolin-eval.report.v3`
+- `schema_version`: currently `pangolin-eval.report.v4`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v3.json](schemas/report.v3.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), [schemas/rag-report.v1.json](schemas/rag-report.v1.json), [schemas/trace-events.v1.json](schemas/trace-events.v1.json), and [schemas/tracecards.v1.json](schemas/tracecards.v1.json).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v4.json](schemas/report.v4.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), [schemas/rag-report.v1.json](schemas/rag-report.v1.json), [schemas/trace-events.v1.json](schemas/trace-events.v1.json), and [schemas/tracecards.v1.json](schemas/tracecards.v1.json).
 
 ## Open-Core Direction
 
