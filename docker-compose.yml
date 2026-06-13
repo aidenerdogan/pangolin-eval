@@ -1,0 +1,38 @@
+services:
+  demo:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      PYTHONPATH: /app/src
+    command:
+      - python
+      - -m
+      - pangolin_eval.cli
+      - run
+      - --config
+      - examples/simple_model_compare/config.json
+      - --out
+      - reports/docker_demo
+      - --content-mode
+      - metadata-only
+
+  rag-demo:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      PYTHONPATH: /app/src
+    command:
+      - python
+      - -m
+      - pangolin_eval.cli
+      - rag
+      - --config
+      - examples/rag_eval/config.json
+      - --out
+      - reports/docker_rag_demo
+      - --content-mode
+      - metadata-only

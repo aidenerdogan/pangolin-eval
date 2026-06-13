@@ -70,6 +70,14 @@ PYTHONPATH=src python -m pangolin_eval.cli trace \
   --out reports/agent_trace
 ```
 
+Export supported artifacts as OTel-style spans:
+
+```bash
+PYTHONPATH=src python -m pangolin_eval.cli export-otel \
+  --input reports/simple_model_compare/report.json \
+  --out reports/simple_model_compare/otel.json
+```
+
 Install locally for CLI usage:
 
 ```bash
@@ -106,6 +114,7 @@ Version 0.1 focuses on the smallest useful artifact:
 - synthetic RAG evaluation CLI and report
 - local agent/workflow TraceCards
 - auditable recommendations-lite
+- OTel-style export for reports and TraceCards
 
 ## Planned Scope
 
@@ -124,7 +133,14 @@ JSON reports declare a schema version and content mode:
 - `schema_version`: currently `pangolin-eval.report.v4`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v4.json](schemas/report.v4.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), [schemas/rag-report.v1.json](schemas/rag-report.v1.json), [schemas/trace-events.v1.json](schemas/trace-events.v1.json), and [schemas/tracecards.v1.json](schemas/tracecards.v1.json).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [docs/EXTENSIONS.md](docs/EXTENSIONS.md), and the files under [schemas/](schemas).
+
+## Local Demo With Docker
+
+```bash
+docker compose run --rm demo
+docker compose run --rm rag-demo
+```
 
 ## Open-Core Direction
 

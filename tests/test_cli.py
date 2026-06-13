@@ -149,6 +149,45 @@ class CliTest(unittest.TestCase):
         self.assertEqual(payload["schema_version"], "pangolin-eval.tracecards.v1")
         self.assertEqual(len(payload["tracecards"]), 2)
 
+    def test_export_otel_command_writes_spans(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_path = Path(temp_dir) / "report.json"
+            output_path = Path(temp_dir) / "otel.json"
+            input_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "pangolin-eval.report.v4",
+                        "results": [
+                            {
+                                "model_id": "mock-model",
+                                "prompt_id": "case-1",
+                                "status": "success",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "export-otel",
+                        "--input",
+                        str(input_path),
+                        "--out",
+                        str(output_path),
+                    ]
+                )
+
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Wrote OTel-style export", stdout.getvalue())
+        self.assertEqual(payload["schema_version"], "pangolin-eval.otel_export.v1")
+        self.assertEqual(payload["spans"][0]["kind"], "llm")
+
 
 if __name__ == "__main__":
     unittest.main()

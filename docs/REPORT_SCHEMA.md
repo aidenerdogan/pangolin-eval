@@ -2,6 +2,12 @@
 
 PangolinEval writes a versioned JSON report at `report.json`.
 
+Evaluation configs are documented by:
+
+```text
+schemas/eval-config.v1.json
+```
+
 Current schema:
 
 ```text
@@ -81,3 +87,14 @@ schema_version: pangolin-eval.tracecards.v1
 ```
 
 TraceCards summarize per-task cost, latency, tokens, retries, failures, cache hits, repeated steps, and cost per successful task.
+
+## OTel-Style Export
+
+`pangolin-eval export-otel` writes:
+
+```text
+schemas/otel-export.v1.json
+schema_version: pangolin-eval.otel_export.v1
+```
+
+Supported inputs are standard comparison reports and TraceCards.

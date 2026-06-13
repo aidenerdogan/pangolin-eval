@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aidenerdogan/pangolin-eval/schemas/eval-config.v1.json",
+  "title": "PangolinEval Eval Config v1",
+  "type": "object",
+  "required": ["models", "prompts"],
+  "properties": {
+    "run_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "pricing_catalog": {
+      "type": "string"
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "input_price_per_1m",
+          "output_price_per_1m"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "enum": ["mock", "openai_compatible"]
+          },
+          "input_price_per_1m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "output_price_per_1m": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "messages"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["role", "content"],
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "expected_keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

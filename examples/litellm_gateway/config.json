@@ -1,0 +1,35 @@
+{
+  "run_name": "litellm-gateway-example",
+  "description": "Template for evaluating through a local LiteLLM OpenAI-compatible gateway.",
+  "models": [
+    {
+      "id": "gateway-small",
+      "provider": "openai_compatible",
+      "api_model": "gpt-4o-mini",
+      "base_url": "http://localhost:4000/v1",
+      "api_key_env": "LITELLM_API_KEY",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "model_group": "small",
+      "supports_tools": true,
+      "supports_json_mode": true,
+      "latency_band": "gateway"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "routing-check",
+      "feature": "platform",
+      "workflow": "gateway-routing",
+      "environment": "local",
+      "prompt_version": "gateway-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Summarize the value of routing LLM traffic through an OpenAI-compatible gateway."
+        }
+      ],
+      "expected_keywords": ["routing", "gateway", "cost"]
+    }
+  ]
+}

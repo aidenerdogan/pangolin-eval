@@ -6,6 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from pangolin_eval.config import load_config, parse_gates, parse_models, parse_prompts
+from pangolin_eval.exports import load_json_artifact, write_otel_export
 from pangolin_eval.gates import evaluate_gates, gates_passed
 from pangolin_eval.pricing import apply_pricing_catalog, load_pricing_catalog
 from pangolin_eval.rag import (
@@ -90,6 +91,21 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Output directory for tracecards.json and tracecards.md.",
     )
+
+    export_parser = subparsers.add_parser(
+        "export-otel",
+        help="Export a PangolinEval artifact as OTel-style spans.",
+    )
+    export_parser.add_argument(
+        "--input",
+        required=True,
+        help="Path to report.json or tracecards.json.",
+    )
+    export_parser.add_argument(
+        "--out",
+        required=True,
+        help="Output JSON path for exported spans.",
+    )
     return parser
 
 
@@ -106,6 +122,8 @@ def main(argv: list[str] | None = None) -> int:
             return rag_command(Path(args.config), Path(args.out), args.content_mode)
         if args.command == "trace":
             return trace_command(Path(args.input), Path(args.out))
+        if args.command == "export-otel":
+            return export_otel_command(Path(args.input), Path(args.out))
     except (OSError, ValueError, RuntimeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
@@ -169,6 +187,12 @@ def trace_command(input_path: Path, out_dir: Path) -> int:
     json_path, markdown_path = write_tracecard_report(report, out_dir)
     print(f"Wrote TraceCard JSON report: {json_path}")
     print(f"Wrote TraceCard Markdown report: {markdown_path}")
+    return 0
+
+
+def export_otel_command(input_path: Path, out_path: Path) -> int:
+    output_path = write_otel_export(load_json_artifact(input_path), out_path)
+    print(f"Wrote OTel-style export: {output_path}")
     return 0
 
 

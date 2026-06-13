@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aidenerdogan/pangolin-eval/schemas/otel-export.v1.json",
+  "title": "PangolinEval OTel Export v1",
+  "type": "object",
+  "required": ["schema_version", "spans"],
+  "properties": {
+    "schema_version": {
+      "const": "pangolin-eval.otel_export.v1"
+    },
+    "spans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "status", "attributes"],
+        "properties": {
+          "name": {
+            "type": ["string", "null"]
+          },
+          "kind": {
+            "type": ["string", "null"]
+          },
+          "status": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

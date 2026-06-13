@@ -1,0 +1,39 @@
+{
+  "run_name": "openai-compatible-example",
+  "description": "Template for running a live OpenAI-compatible provider.",
+  "models": [
+    {
+      "id": "live-model",
+      "provider": "openai_compatible",
+      "api_model": "gpt-4o-mini",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "model_group": "small",
+      "context_window_tokens": 128000,
+      "supports_json_mode": true,
+      "latency_band": "medium"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "cost-summary",
+      "feature": "product-ops",
+      "workflow": "cost-education",
+      "environment": "local",
+      "prompt_version": "live-v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You summarize business tradeoffs for engineering leaders."
+        },
+        {
+          "role": "user",
+          "content": "Explain why teams should compare model quality, latency, and cost before scaling an AI product."
+        }
+      ],
+      "expected_keywords": ["quality", "latency", "cost"]
+    }
+  ]
+}
