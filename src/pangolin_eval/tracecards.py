@@ -93,6 +93,18 @@ def generate_tracecard(
     total_cost = sum(event.estimated_cost_usd for event in events)
     total_latency = sum(event.latency_ms for event in events)
     repeated_step_count = repeated_steps(events)
+    retry_count = sum(event.retry_count for event in events)
+    failure_count = sum(1 for event in events if not event.success)
+    failed_tool_call_count = sum(
+        1
+        for event in events
+        if event.event_type == "tool_call" and not event.success
+    )
+    wasted_cost = sum(
+        event.estimated_cost_usd
+        for event in events
+        if not event.success or event.retry_count > 0 or event.event_type == "retry"
+    )
     return TraceCard(
         task_id=task_id,
         outcome=outcome,
@@ -102,11 +114,14 @@ def generate_tracecard(
         total_latency_ms=total_latency,
         input_tokens=sum(event.input_tokens for event in events),
         output_tokens=sum(event.output_tokens for event in events),
-        retry_count=sum(event.retry_count for event in events),
-        failure_count=sum(1 for event in events if not event.success),
+        retry_count=retry_count,
+        failure_count=failure_count,
         cache_hit_count=sum(1 for event in events if event.cache_hit),
         repeated_step_count=repeated_step_count,
         cost_per_successful_task_usd=total_cost if success else None,
+        failed_tool_call_count=failed_tool_call_count,
+        wasted_cost_usd=wasted_cost,
+        loop_risk=repeated_step_count > 0 or retry_count > 0,
     )
 
 

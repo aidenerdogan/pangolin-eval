@@ -1,0 +1,42 @@
+{
+  "run_name": "vllm-openai-compatible",
+  "description": "Template for evaluating a vLLM OpenAI-compatible gateway.",
+  "models": [
+    {
+      "id": "vllm-gateway",
+      "provider": "openai_compatible",
+      "api_model": "meta-llama/Llama-3.1-8B-Instruct",
+      "base_url": "http://localhost:8000/v1",
+      "api_key_env": "VLLM_API_KEY",
+      "input_price_per_1m": 0,
+      "output_price_per_1m": 0,
+      "token_counter": "openai_chat",
+      "model_group": "self-hosted"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "routing-check",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a precise assistant for AI platform reviews."
+        },
+        {
+          "role": "user",
+          "content": "Name two metrics a team should compare when choosing a production LLM."
+        }
+      ],
+      "evaluators": [
+        {
+          "type": "contains",
+          "value": "latency"
+        },
+        {
+          "type": "regex",
+          "value": "cost|price|spend"
+        }
+      ]
+    }
+  ]
+}

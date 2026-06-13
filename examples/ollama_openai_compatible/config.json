@@ -1,0 +1,39 @@
+{
+  "run_name": "ollama-openai-compatible",
+  "description": "Template for evaluating a local Ollama model through its OpenAI-compatible chat API.",
+  "models": [
+    {
+      "id": "ollama-local",
+      "provider": "openai_compatible",
+      "api_model": "llama3.1",
+      "base_url": "http://localhost:11434/v1",
+      "api_key_env": "OLLAMA_API_KEY",
+      "input_price_per_1m": 0,
+      "output_price_per_1m": 0,
+      "token_counter": "openai_chat",
+      "model_group": "local"
+    }
+  ],
+  "prompts": [
+    {
+      "id": "support-summary",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a concise support operations assistant."
+        },
+        {
+          "role": "user",
+          "content": "Summarize why teams should measure model cost, latency, and answer quality before launch."
+        }
+      ],
+      "expected_keywords": ["cost", "latency", "quality"],
+      "evaluators": [
+        {
+          "type": "regex",
+          "value": "cost|spend"
+        }
+      ]
+    }
+  ]
+}

@@ -90,6 +90,17 @@
         "cost_per_successful_task_usd": {
           "type": ["number", "null"],
           "minimum": 0
+        },
+        "failed_tool_call_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wasted_cost_usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "loop_risk": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

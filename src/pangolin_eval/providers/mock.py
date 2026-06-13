@@ -15,8 +15,8 @@ class MockProvider(Provider):
         )
         return Completion(
             text=response,
-            input_tokens=estimate_message_tokens(prompt.messages),
-            output_tokens=estimate_tokens(response),
+            input_tokens=estimate_message_tokens(prompt.messages, model.token_counter),
+            output_tokens=estimate_tokens(response, model.token_counter),
             latency_ms=model.mock_latency_ms or 0,
-            metadata={"provider": "mock"},
+            metadata={"provider": "mock", "token_counter": model.token_counter},
         )

@@ -6,6 +6,7 @@ from pangolin_eval.models import ModelTarget, RagDocument, RagQuestion
 from pangolin_eval.rag import (
     cites_any_document,
     faithfulness_score,
+    repeated_context_ratio,
     run_rag_evaluation,
     unused_context_ratio,
 )
@@ -40,6 +41,7 @@ class RagTest(unittest.TestCase):
                     expected_keywords=["refund", "30 days"],
                 )
             ],
+            max_context_tokens=1,
         )
 
         result = report.results[0]
@@ -50,6 +52,8 @@ class RagTest(unittest.TestCase):
         self.assertEqual(result.faithfulness_score, 1.0)
         self.assertGreater(result.context_efficiency or 0, 0)
         self.assertFalse(result.missing_citation)
+        self.assertTrue(result.oversized_context)
+        self.assertIsNotNone(result.cost_per_covered_answer_usd)
 
     def test_rag_helpers_flag_missing_citation_and_unused_context(self) -> None:
         self.assertTrue(cites_any_document("Use [doc-1].", ["doc-1"]))
@@ -67,6 +71,15 @@ class RagTest(unittest.TestCase):
                 ["refund"],
             ),
             0.5,
+        )
+        self.assertEqual(
+            repeated_context_ratio(
+                [
+                    RagDocument(id="doc-1", text="same sentence. unique"),
+                    RagDocument(id="doc-2", text="same sentence. different"),
+                ]
+            ),
+            0.25,
         )
 
 

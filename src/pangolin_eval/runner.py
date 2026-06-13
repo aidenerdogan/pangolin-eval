@@ -13,7 +13,7 @@ from pangolin_eval.models import (
 )
 from pangolin_eval.providers import MockProvider, OpenAICompatibleProvider, Provider
 from pangolin_eval.recommendations import generate_recommendations
-from pangolin_eval.scoring import estimate_cost_usd, keyword_quality_score
+from pangolin_eval.scoring import estimate_cost_usd, prompt_quality_score
 
 
 def run_comparison(
@@ -51,7 +51,11 @@ def run_comparison(
                 )
                 continue
 
-            quality_score = keyword_quality_score(completion.text, prompt.expected_keywords)
+            quality_score = prompt_quality_score(
+                completion.text,
+                prompt.expected_keywords,
+                prompt.evaluators,
+            )
             estimated_cost = estimate_cost_usd(
                 completion.input_tokens,
                 completion.output_tokens,

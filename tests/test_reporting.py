@@ -19,8 +19,11 @@ from pangolin_eval.models import (
     TraceEvent,
 )
 from pangolin_eval.reporting import (
+    render_html_report,
     render_markdown,
+    render_rag_html_report,
     render_rag_markdown,
+    render_tracecard_html_report,
     render_tracecard_markdown,
     write_reports,
 )
@@ -159,6 +162,13 @@ class ReportingTest(unittest.TestCase):
             self.assertEqual(payload["content_mode"], "full")
             self.assertIn("## Model Summary", markdown_path.read_text(encoding="utf-8"))
 
+    def test_render_html_report_includes_escaped_summary(self) -> None:
+        html = render_html_report(sample_report())
+
+        self.assertIn("<!doctype html>", html)
+        self.assertIn("<h2>Model Summary</h2>", html)
+        self.assertIn("mock-model", html)
+
     def test_report_schema_file_matches_runtime_version(self) -> None:
         schema = json.loads(
             Path("schemas/report.v4.json").read_text(encoding="utf-8")
@@ -195,6 +205,10 @@ class ReportingTest(unittest.TestCase):
 
         self.assertIn("## RAG Results", markdown)
         self.assertIn("| mock-model | case-1 | 1.00 | 1.00 |", markdown)
+        self.assertIn("Repeated context", markdown)
+
+        html = render_rag_html_report(report)
+        self.assertIn("<h2>RAG Results</h2>", html)
 
     def test_render_tracecard_markdown_includes_summary(self) -> None:
         report = TraceCardReport(
@@ -231,6 +245,10 @@ class ReportingTest(unittest.TestCase):
 
         self.assertIn("## TraceCards", markdown)
         self.assertIn("| task-1 | success | 0.01000000 |", markdown)
+        self.assertIn("Wasted cost USD", markdown)
+
+        html = render_tracecard_html_report(report)
+        self.assertIn("<h2>TraceCards</h2>", html)
 
 
 if __name__ == "__main__":

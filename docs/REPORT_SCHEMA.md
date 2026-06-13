@@ -42,6 +42,8 @@ pangolin-eval run \
 - Token counts, latency, estimated cost, quality score, reliability fields, gate results, and provider metadata remain available in both modes.
 - Prompt messages are not written to reports in the current schema.
 - `usage_source` distinguishes provider-reported usage from estimated usage.
+- `token_counter` can be set per model for estimated usage fallback when provider usage is unavailable.
+- Quality scoring can combine `expected_keywords` with weighted `keyword`, `contains`, `regex`, and `exact` evaluators.
 - Prompt results can include attribution fields: `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`.
 - Pricing provenance fields include `pricing_source`, `pricing_source_url`, and `pricing_updated_at`.
 - `aggregations` summarizes cost, quality, latency, and reliability by model, prompt, feature, workflow, environment, prompt version, and model group.
@@ -68,7 +70,7 @@ schemas/rag-report.v1.json
 schema_version: pangolin-eval.rag_report.v1
 ```
 
-RAG results include retrieved context tokens, answer tokens, answer coverage, simple faithfulness, context efficiency, unused-context signal, missing-citation flag, latency, and estimated cost.
+RAG results include retrieved context tokens, answer tokens, answer coverage, simple faithfulness, context efficiency, unused-context signal, repeated-context signal, oversized-context flag, missing-citation flag, latency, estimated cost, and cost per covered answer.
 
 ## TraceCards
 
@@ -86,7 +88,12 @@ schemas/tracecards.v1.json
 schema_version: pangolin-eval.tracecards.v1
 ```
 
-TraceCards summarize per-task cost, latency, tokens, retries, failures, cache hits, repeated steps, and cost per successful task.
+TraceCards summarize per-task cost, latency, tokens, retries, failures, failed tool calls, cache hits, repeated steps, wasted cost, loop risk, and cost per successful task.
+
+## Static HTML Reports
+
+The `run`, `rag`, and `trace` commands accept `--html` to write dependency-free HTML
+summaries next to the JSON and Markdown artifacts.
 
 ## OTel-Style Export
 

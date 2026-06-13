@@ -15,8 +15,8 @@ This project starts with local, file-based workflows:
 - compare models on the same prompts
 - estimate token and provider cost
 - measure latency
-- score simple quality checks
-- generate Markdown and JSON reports
+- score weighted quality checks
+- generate Markdown, JSON, and optional static HTML reports
 - apply budget, quality, latency, and reliability gates
 - summarize attribution by model, prompt, feature, workflow, environment, and prompt version
 - evaluate synthetic RAG tasks for context efficiency and answer coverage
@@ -31,7 +31,8 @@ Run the bundled mock comparison. It does not require API keys.
 cd pangolin-eval
 PYTHONPATH=src python -m pangolin_eval.cli run \
   --config examples/simple_model_compare/config.json \
-  --out reports/simple_model_compare
+  --out reports/simple_model_compare \
+  --html
 ```
 
 For sensitive runs, omit response text from saved artifacts while keeping metrics and quality scores:
@@ -111,27 +112,28 @@ The current local open-source version includes:
 - mock provider for reproducible public demos
 - OpenAI-compatible provider adapter
 - latency, token, and cost tracking
-- keyword-based quality scoring
-- Markdown and JSON reporting
+- keyword, contains, regex, and exact-match quality evaluators
+- configurable token counters for estimated usage fallback
+- Markdown, JSON, and optional static HTML reporting
 - versioned report schema
 - metadata-only report mode for privacy-conscious runs
 - budget, quality, latency, and reliability gates
 - failure-tolerant runs with success/error status fields
 - attribution and pricing provenance summaries
-- synthetic RAG evaluation CLI and report
-- local agent/workflow TraceCards
+- synthetic RAG evaluation CLI and report with context diagnostics
+- local agent/workflow TraceCards with loop and waste diagnostics
 - auditable recommendations-lite
 - OTel-style export for reports and TraceCards
-- OpenAI-compatible and LiteLLM gateway examples
+- OpenAI-compatible, LiteLLM, Ollama, and vLLM gateway examples
 - Docker Compose no-key demos
 
-## Planned Scope
+## Project Status
 
-- richer evaluator plugins beyond keyword matching
-- tokenizer-specific counting where provider usage is unavailable
-- more provider and gateway examples
-- richer RAG and agent diagnostics
-- optional static HTML reports if Markdown/JSON are not enough for demos
+The planned local open-source scope is implemented for the current release track:
+weighted evaluator plugins, configurable token counters, additional gateway examples,
+RAG and agent diagnostics, and optional static HTML reports are available. Future work
+can focus on polish, more adapters, and hosted or team workflows without weakening the
+local CLI/library foundation.
 
 ## Report Contract
 
@@ -175,6 +177,7 @@ Model entries include:
 - `output_price_per_1m`: output token cost estimate
 - `model_group`: optional grouping for attribution
 - `max_retries`: retry attempts after provider failures
+- `token_counter`: estimated usage fallback, one of `char_4`, `whitespace`, or `openai_chat`
 - `pricing_source`, `pricing_source_url`, `pricing_updated_at`: pricing provenance
 - capability metadata such as `context_window_tokens`, `supports_tools`, `supports_json_mode`, and `latency_band`
 
@@ -183,7 +186,19 @@ Prompt entries include:
 - `id`: prompt case identifier
 - `messages`: chat-style messages
 - `expected_keywords`: optional simple quality check
+- `evaluators`: optional weighted checks using `keyword`, `contains`, `regex`, or `exact`
 - attribution fields such as `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`
+
+Evaluator example:
+
+```json
+{
+  "evaluators": [
+    {"type": "contains", "value": "latency"},
+    {"type": "regex", "value": "cost|price|spend", "weight": 2}
+  ]
+}
+```
 
 Gate examples:
 
@@ -220,6 +235,13 @@ Then run:
 export OPENAI_API_KEY="..."
 pangolin-eval run --config path/to/config.json --out reports/live
 ```
+
+Additional templates:
+
+- [examples/openai_compatible/config.json](examples/openai_compatible/config.json)
+- [examples/litellm_gateway/config.json](examples/litellm_gateway/config.json)
+- [examples/ollama_openai_compatible/config.json](examples/ollama_openai_compatible/config.json)
+- [examples/vllm_openai_compatible/config.json](examples/vllm_openai_compatible/config.json)
 
 ## Intended Users
 

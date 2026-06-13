@@ -9,6 +9,16 @@ REPORT_SCHEMA_VERSION = "pangolin-eval.report.v4"
 RAG_REPORT_SCHEMA_VERSION = "pangolin-eval.rag_report.v1"
 TRACECARD_SCHEMA_VERSION = "pangolin-eval.tracecards.v1"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
+SUPPORTED_EVALUATOR_TYPES = {"keyword", "contains", "regex", "exact"}
+SUPPORTED_TOKEN_COUNTERS = {"char_4", "whitespace", "openai_chat"}
+
+
+@dataclass(frozen=True)
+class QualityEvaluator:
+    type: str
+    value: str
+    weight: float = 1.0
+    case_sensitive: bool = False
 
 
 @dataclass(frozen=True)
@@ -16,6 +26,7 @@ class PromptCase:
     id: str
     messages: list[Message]
     expected_keywords: list[str] = field(default_factory=list)
+    evaluators: list[QualityEvaluator] = field(default_factory=list)
     feature: str | None = None
     workflow: str | None = None
     environment: str | None = None
@@ -45,6 +56,7 @@ class ModelTarget:
     supports_json_mode: bool = False
     supports_multimodal: bool = False
     latency_band: str | None = None
+    token_counter: str = "char_4"
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -163,6 +175,7 @@ class RagQuestion:
     question: str
     context_ids: list[str]
     expected_keywords: list[str] = field(default_factory=list)
+    evaluators: list[QualityEvaluator] = field(default_factory=list)
     feature: str | None = None
     workflow: str | None = None
     environment: str | None = None
@@ -183,6 +196,9 @@ class RagResult:
     context_efficiency: float | None
     unused_context_signal: float
     missing_citation: bool
+    oversized_context: bool = False
+    repeated_context_signal: float = 0
+    cost_per_covered_answer_usd: float | None = None
     success: bool = True
     status: str = "success"
     error: str | None = None
@@ -229,6 +245,9 @@ class TraceCard:
     cache_hit_count: int
     repeated_step_count: int
     cost_per_successful_task_usd: float | None
+    failed_tool_call_count: int = 0
+    wasted_cost_usd: float = 0
+    loop_risk: bool = False
 
 
 @dataclass(frozen=True)

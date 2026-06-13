@@ -1,6 +1,7 @@
 {
   "run_name": "synthetic-rag-eval",
   "description": "Synthetic RAG evaluation over product-support, billing, and security notes.",
+  "max_context_tokens": 500,
   "models": [
     {
       "id": "rag-baseline",
