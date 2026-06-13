@@ -13,8 +13,16 @@ from pangolin_eval.models import (
     RagReport,
     RagResult,
     RunReport,
+    TraceCard,
+    TraceCardReport,
+    TraceEvent,
 )
-from pangolin_eval.reporting import render_markdown, render_rag_markdown, write_reports
+from pangolin_eval.reporting import (
+    render_markdown,
+    render_rag_markdown,
+    render_tracecard_markdown,
+    write_reports,
+)
 
 
 def sample_report() -> RunReport:
@@ -162,6 +170,42 @@ class ReportingTest(unittest.TestCase):
 
         self.assertIn("## RAG Results", markdown)
         self.assertIn("| mock-model | case-1 | 1.00 | 1.00 |", markdown)
+
+    def test_render_tracecard_markdown_includes_summary(self) -> None:
+        report = TraceCardReport(
+            run_name="trace",
+            description="",
+            tracecards=[
+                TraceCard(
+                    task_id="task-1",
+                    outcome="success",
+                    success=True,
+                    events=[
+                        TraceEvent(
+                            id="e1",
+                            event_type="llm_call",
+                            name="answer",
+                            estimated_cost_usd=0.01,
+                            latency_ms=100,
+                        )
+                    ],
+                    total_cost_usd=0.01,
+                    total_latency_ms=100,
+                    input_tokens=10,
+                    output_tokens=5,
+                    retry_count=0,
+                    failure_count=0,
+                    cache_hit_count=0,
+                    repeated_step_count=0,
+                    cost_per_successful_task_usd=0.01,
+                )
+            ],
+        )
+
+        markdown = render_tracecard_markdown(report)
+
+        self.assertIn("## TraceCards", markdown)
+        self.assertIn("| task-1 | success | 0.01000000 |", markdown)
 
 
 if __name__ == "__main__":

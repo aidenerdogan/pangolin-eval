@@ -1,0 +1,89 @@
+{
+  "schema_version": "pangolin-eval.trace_events.v1",
+  "run_name": "synthetic-agent-trace",
+  "description": "Synthetic agent workflow showing retries, cache reads, and a failed tool call.",
+  "traces": [
+    {
+      "task_id": "refund-investigation",
+      "outcome": "success",
+      "events": [
+        {
+          "id": "e1",
+          "event_type": "llm_call",
+          "name": "plan",
+          "model_id": "mock-agent",
+          "input_tokens": 500,
+          "output_tokens": 120,
+          "latency_ms": 800,
+          "estimated_cost_usd": 0.00012
+        },
+        {
+          "id": "e2",
+          "event_type": "tool_call",
+          "name": "lookup_order",
+          "latency_ms": 120,
+          "estimated_cost_usd": 0
+        },
+        {
+          "id": "e3",
+          "event_type": "cache_read",
+          "name": "policy_cache",
+          "latency_ms": 10,
+          "cache_hit": true
+        },
+        {
+          "id": "e4",
+          "event_type": "llm_call",
+          "name": "final_answer",
+          "model_id": "mock-agent",
+          "input_tokens": 700,
+          "output_tokens": 180,
+          "latency_ms": 900,
+          "estimated_cost_usd": 0.00017
+        }
+      ]
+    },
+    {
+      "task_id": "billing-update",
+      "outcome": "failed",
+      "events": [
+        {
+          "id": "e1",
+          "event_type": "llm_call",
+          "name": "plan",
+          "model_id": "mock-agent",
+          "input_tokens": 450,
+          "output_tokens": 90,
+          "latency_ms": 760,
+          "estimated_cost_usd": 0.0001
+        },
+        {
+          "id": "e2",
+          "event_type": "tool_call",
+          "name": "update_billing_owner",
+          "latency_ms": 300,
+          "estimated_cost_usd": 0,
+          "success": false,
+          "error": "PermissionDenied"
+        },
+        {
+          "id": "e3",
+          "event_type": "retry",
+          "name": "update_billing_owner",
+          "latency_ms": 320,
+          "retry_count": 1,
+          "success": false,
+          "error": "PermissionDenied"
+        },
+        {
+          "id": "e4",
+          "event_type": "tool_call",
+          "name": "update_billing_owner",
+          "latency_ms": 330,
+          "success": false,
+          "error": "PermissionDenied"
+        }
+      ]
+    }
+  ]
+}

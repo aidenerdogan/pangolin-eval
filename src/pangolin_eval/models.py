@@ -7,6 +7,7 @@ from typing import Any
 Message = dict[str, str]
 REPORT_SCHEMA_VERSION = "pangolin-eval.report.v3"
 RAG_REPORT_SCHEMA_VERSION = "pangolin-eval.rag_report.v1"
+TRACECARD_SCHEMA_VERSION = "pangolin-eval.tracecards.v1"
 SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
 
 
@@ -174,3 +175,45 @@ class RagReport:
     results: list[RagResult]
     schema_version: str = RAG_REPORT_SCHEMA_VERSION
     content_mode: str = "full"
+
+
+@dataclass(frozen=True)
+class TraceEvent:
+    id: str
+    event_type: str
+    name: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    latency_ms: int = 0
+    estimated_cost_usd: float = 0
+    success: bool = True
+    error: str | None = None
+    retry_count: int = 0
+    cache_hit: bool = False
+    model_id: str | None = None
+    parent_id: str | None = None
+
+
+@dataclass(frozen=True)
+class TraceCard:
+    task_id: str
+    outcome: str
+    success: bool
+    events: list[TraceEvent]
+    total_cost_usd: float
+    total_latency_ms: int
+    input_tokens: int
+    output_tokens: int
+    retry_count: int
+    failure_count: int
+    cache_hit_count: int
+    repeated_step_count: int
+    cost_per_successful_task_usd: float | None
+
+
+@dataclass(frozen=True)
+class TraceCardReport:
+    run_name: str
+    description: str
+    tracecards: list[TraceCard]
+    schema_version: str = TRACECARD_SCHEMA_VERSION

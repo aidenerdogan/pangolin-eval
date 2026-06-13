@@ -15,8 +15,9 @@ from pangolin_eval.rag import (
     parse_rag_models,
     run_rag_evaluation,
 )
-from pangolin_eval.reporting import write_rag_report, write_reports
+from pangolin_eval.reporting import write_rag_report, write_reports, write_tracecard_report
 from pangolin_eval.runner import run_comparison
+from pangolin_eval.tracecards import generate_tracecard_report, load_trace_config
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -74,6 +75,21 @@ def build_parser() -> argparse.ArgumentParser:
         default="full",
         help="Use 'metadata-only' to omit response text from saved RAG reports.",
     )
+
+    trace_parser = subparsers.add_parser(
+        "trace",
+        help="Generate agent/workflow TraceCards from local trace events.",
+    )
+    trace_parser.add_argument(
+        "--input",
+        required=True,
+        help="Path to a JSON trace-events file.",
+    )
+    trace_parser.add_argument(
+        "--out",
+        required=True,
+        help="Output directory for tracecards.json and tracecards.md.",
+    )
     return parser
 
 
@@ -88,6 +104,8 @@ def main(argv: list[str] | None = None) -> int:
             return validate_command(Path(args.config))
         if args.command == "rag":
             return rag_command(Path(args.config), Path(args.out), args.content_mode)
+        if args.command == "trace":
+            return trace_command(Path(args.input), Path(args.out))
     except (OSError, ValueError, RuntimeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
@@ -142,6 +160,15 @@ def rag_command(config_path: Path, out_dir: Path, content_mode: str = "full") ->
     json_path, markdown_path = write_rag_report(report, out_dir)
     print(f"Wrote RAG JSON report: {json_path}")
     print(f"Wrote RAG Markdown report: {markdown_path}")
+    return 0
+
+
+def trace_command(input_path: Path, out_dir: Path) -> int:
+    config = load_trace_config(input_path)
+    report = generate_tracecard_report(config)
+    json_path, markdown_path = write_tracecard_report(report, out_dir)
+    print(f"Wrote TraceCard JSON report: {json_path}")
+    print(f"Wrote TraceCard Markdown report: {markdown_path}")
     return 0
 
 

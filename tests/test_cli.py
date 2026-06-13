@@ -125,6 +125,30 @@ class CliTest(unittest.TestCase):
         self.assertEqual(payload["content_mode"], "metadata_only")
         self.assertIsNone(payload["results"][0]["response"])
 
+    def test_trace_command_writes_tracecards(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "trace",
+                        "--input",
+                        "examples/agent_trace/trace_events.json",
+                        "--out",
+                        temp_dir,
+                    ]
+                )
+
+            payload = json.loads(
+                (Path(temp_dir) / "tracecards.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Wrote TraceCard JSON report", stdout.getvalue())
+        self.assertEqual(payload["schema_version"], "pangolin-eval.tracecards.v1")
+        self.assertEqual(len(payload["tracecards"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

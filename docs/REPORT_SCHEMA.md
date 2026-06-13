@@ -63,4 +63,20 @@ schema_version: pangolin-eval.rag_report.v1
 
 RAG results include retrieved context tokens, answer tokens, answer coverage, simple faithfulness, context efficiency, unused-context signal, missing-citation flag, latency, and estimated cost.
 
-Future schema versions will add agent TraceCards.
+## TraceCards
+
+TraceCard input events use:
+
+```text
+schemas/trace-events.v1.json
+schema_version: pangolin-eval.trace_events.v1
+```
+
+Generated TraceCards use:
+
+```text
+schemas/tracecards.v1.json
+schema_version: pangolin-eval.tracecards.v1
+```
+
+TraceCards summarize per-task cost, latency, tokens, retries, failures, cache hits, repeated steps, and cost per successful task.

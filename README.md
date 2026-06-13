@@ -62,6 +62,14 @@ PYTHONPATH=src python -m pangolin_eval.cli rag \
   --content-mode metadata-only
 ```
 
+Generate agent/workflow TraceCards from local trace events:
+
+```bash
+PYTHONPATH=src python -m pangolin_eval.cli trace \
+  --input examples/agent_trace/trace_events.json \
+  --out reports/agent_trace
+```
+
 Install locally for CLI usage:
 
 ```bash
@@ -96,6 +104,7 @@ Version 0.1 focuses on the smallest useful artifact:
 - versioned report schema
 - metadata-only report mode for privacy-conscious runs
 - synthetic RAG evaluation CLI and report
+- local agent/workflow TraceCards
 
 ## Planned Scope
 
@@ -114,7 +123,7 @@ JSON reports declare a schema version and content mode:
 - `schema_version`: currently `pangolin-eval.report.v3`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v3.json](schemas/report.v3.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), and [schemas/rag-report.v1.json](schemas/rag-report.v1.json).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [schemas/report.v3.json](schemas/report.v3.json), [schemas/pricing-catalog.v1.json](schemas/pricing-catalog.v1.json), [schemas/rag-report.v1.json](schemas/rag-report.v1.json), [schemas/trace-events.v1.json](schemas/trace-events.v1.json), and [schemas/tracecards.v1.json](schemas/tracecards.v1.json).
 
 ## Open-Core Direction
 

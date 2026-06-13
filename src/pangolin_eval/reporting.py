@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from pangolin_eval.models import ModelSummary, RagReport, RunReport
+from pangolin_eval.models import ModelSummary, RagReport, RunReport, TraceCardReport
 
 
 def write_reports(report: RunReport, out_dir: str | Path) -> tuple[Path, Path]:
@@ -34,6 +34,24 @@ def write_rag_report(report: RagReport, out_dir: str | Path) -> tuple[Path, Path
         encoding="utf-8",
     )
     markdown_path.write_text(render_rag_markdown(report), encoding="utf-8")
+    return json_path, markdown_path
+
+
+def write_tracecard_report(
+    report: TraceCardReport,
+    out_dir: str | Path,
+) -> tuple[Path, Path]:
+    output_path = Path(out_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    json_path = output_path / "tracecards.json"
+    markdown_path = output_path / "tracecards.md"
+
+    json_path.write_text(
+        json.dumps(asdict(report), indent=2),
+        encoding="utf-8",
+    )
+    markdown_path.write_text(render_tracecard_markdown(report), encoding="utf-8")
     return json_path, markdown_path
 
 
@@ -195,6 +213,59 @@ def render_rag_markdown(report: RagReport) -> str:
             )
         else:
             lines.extend(["```text", result.response, "```", ""])
+    return "\n".join(lines)
+
+
+def render_tracecard_markdown(report: TraceCardReport) -> str:
+    lines = [
+        f"# {report.run_name}",
+        "",
+        f"- Schema version: `{report.schema_version}`",
+        "",
+    ]
+    if report.description:
+        lines.extend([report.description, ""])
+
+    lines.extend(
+        [
+            "## TraceCards",
+            "",
+            "| Task | Outcome | Cost USD | Latency ms | Input tokens | Output tokens | Retries | Failures | Cache hits | Repeated steps | Cost per success |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for card in report.tracecards:
+        cost_per_success = (
+            f"{card.cost_per_successful_task_usd:.8f}"
+            if card.cost_per_successful_task_usd is not None
+            else "n/a"
+        )
+        lines.append(
+            f"| {card.task_id} "
+            f"| {card.outcome} "
+            f"| {card.total_cost_usd:.8f} "
+            f"| {card.total_latency_ms} "
+            f"| {card.input_tokens} "
+            f"| {card.output_tokens} "
+            f"| {card.retry_count} "
+            f"| {card.failure_count} "
+            f"| {card.cache_hit_count} "
+            f"| {card.repeated_step_count} "
+            f"| {cost_per_success} |"
+        )
+
+    lines.extend(["", "## Events", ""])
+    for card in report.tracecards:
+        lines.extend([f"### {card.task_id}", ""])
+        for event in card.events:
+            status = "success" if event.success else "failed"
+            lines.append(
+                f"- `{event.event_type}` `{event.name}`: {status}, "
+                f"${event.estimated_cost_usd:.8f}, {event.latency_ms} ms"
+            )
+            if event.error:
+                lines.append(f"  Error: {event.error}")
+        lines.append("")
     return "\n".join(lines)
 
 
