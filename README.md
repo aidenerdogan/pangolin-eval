@@ -10,15 +10,18 @@ AI products are no longer judged only by answer quality. In production, the usef
 
 > Which model gives enough quality for this task at an acceptable cost, latency, and reliability?
 
-This project starts with a focused workflow:
+This project starts with local, file-based workflows:
 
 - compare models on the same prompts
 - estimate token and provider cost
 - measure latency
 - score simple quality checks
 - generate Markdown and JSON reports
-
-Future versions will extend this into RAG evaluation, agent workflow tracing, model routing recommendations, and budget guardrails.
+- apply budget, quality, latency, and reliability gates
+- summarize attribution by model, prompt, feature, workflow, environment, and prompt version
+- evaluate synthetic RAG tasks for context efficiency and answer coverage
+- generate agent/workflow TraceCards from local trace events
+- produce auditable recommendations and OTel-style exports
 
 ## Quickstart
 
@@ -92,15 +95,16 @@ pangolin-eval run \
 The report ranks models by a simple efficiency score that combines quality, cost, and latency.
 
 ```text
-| Model | Avg quality | Avg latency ms | Estimated cost USD | Recommendation |
-| --- | ---: | ---: | ---: | --- |
-| fast-cheap | 0.83 | 180 | 0.000001 | Good baseline |
-| strong-expensive | 1.00 | 540 | 0.000014 | Best quality |
+| Model | Runs | Success rate | Avg quality | Avg latency ms | Estimated cost USD | Recommendation |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| fast-cheap | 2 | 1.00 | 1.00 | 180 | 0.00006015 | Best quality candidate |
+| balanced | 2 | 1.00 | 1.00 | 320 | 0.00022060 | Best quality candidate |
+| strong-expensive | 2 | 1.00 | 1.00 | 540 | 0.00127250 | Usable with latency review |
 ```
 
 ## Current Scope
 
-Version 0.1 focuses on the smallest useful artifact:
+The current local open-source version includes:
 
 - Python 3.9+ CLI and library
 - config-driven model and prompt comparison
@@ -111,20 +115,23 @@ Version 0.1 focuses on the smallest useful artifact:
 - Markdown and JSON reporting
 - versioned report schema
 - metadata-only report mode for privacy-conscious runs
+- budget, quality, latency, and reliability gates
+- failure-tolerant runs with success/error status fields
+- attribution and pricing provenance summaries
 - synthetic RAG evaluation CLI and report
 - local agent/workflow TraceCards
 - auditable recommendations-lite
 - OTel-style export for reports and TraceCards
+- OpenAI-compatible and LiteLLM gateway examples
+- Docker Compose no-key demos
 
 ## Planned Scope
 
-- LiteLLM integration for multi-provider routing
-- RAG evaluation examples
-- RAG evaluation reports
-- agent workflow tracing
-- OpenTelemetry traces
-- budget guardrails
-- CI gates for evaluation regression checks
+- richer evaluator plugins beyond keyword matching
+- tokenizer-specific counting where provider usage is unavailable
+- more provider and gateway examples
+- richer RAG and agent diagnostics
+- optional static HTML reports if Markdown/JSON are not enough for demos
 
 ## Report Contract
 
@@ -152,6 +159,13 @@ The open-source project should remain useful on its own: local reports, transpar
 
 See [examples/simple_model_compare/config.json](examples/simple_model_compare/config.json).
 
+Top-level config can include:
+
+- `run_name`: report title
+- `description`: report description
+- `pricing_catalog`: optional relative path to a pricing catalog
+- `gates`: optional cost, quality, latency, and reliability thresholds
+
 Model entries include:
 
 - `id`: display name used in reports
@@ -159,12 +173,30 @@ Model entries include:
 - `api_model`: provider model id, if different from `id`
 - `input_price_per_1m`: input token cost estimate
 - `output_price_per_1m`: output token cost estimate
+- `model_group`: optional grouping for attribution
+- `max_retries`: retry attempts after provider failures
+- `pricing_source`, `pricing_source_url`, `pricing_updated_at`: pricing provenance
+- capability metadata such as `context_window_tokens`, `supports_tools`, `supports_json_mode`, and `latency_band`
 
 Prompt entries include:
 
 - `id`: prompt case identifier
 - `messages`: chat-style messages
 - `expected_keywords`: optional simple quality check
+- attribution fields such as `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`
+
+Gate examples:
+
+```json
+{
+  "gates": {
+    "max_total_cost_usd": 0.01,
+    "max_avg_latency_ms": 500,
+    "min_avg_quality": 0.75,
+    "min_success_rate": 1.0
+  }
+}
+```
 
 ## OpenAI-Compatible Providers
 
