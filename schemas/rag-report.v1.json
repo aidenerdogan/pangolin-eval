@@ -92,6 +92,18 @@
           "missing_citation": {
             "type": "boolean"
           },
+          "oversized_context": {
+            "type": "boolean"
+          },
+          "repeated_context_signal": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "cost_per_covered_answer_usd": {
+            "type": ["number", "null"],
+            "minimum": 0
+          },
           "success": {
             "type": "boolean"
           },

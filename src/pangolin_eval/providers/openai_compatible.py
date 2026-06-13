@@ -56,13 +56,20 @@ class OpenAICompatibleProvider(Provider):
 
         return Completion(
             text=text,
-            input_tokens=int(usage.get("prompt_tokens") or estimate_message_tokens(prompt.messages)),
-            output_tokens=int(usage.get("completion_tokens") or estimate_tokens(text)),
+            input_tokens=int(
+                usage.get("prompt_tokens")
+                or estimate_message_tokens(prompt.messages, model.token_counter)
+            ),
+            output_tokens=int(
+                usage.get("completion_tokens")
+                or estimate_tokens(text, model.token_counter)
+            ),
             latency_ms=latency_ms,
             metadata={
                 "provider": "openai_compatible",
                 "api_model": model.api_model or model.id,
                 "usage": usage,
+                "token_counter": model.token_counter,
             },
             usage_source=usage_source,
         )

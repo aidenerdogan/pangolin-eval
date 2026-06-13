@@ -44,6 +44,9 @@ class TraceCardsTest(unittest.TestCase):
         self.assertEqual(card.failure_count, 2)
         self.assertEqual(card.retry_count, 1)
         self.assertEqual(card.repeated_step_count, 1)
+        self.assertEqual(card.failed_tool_call_count, 2)
+        self.assertTrue(card.loop_risk)
+        self.assertEqual(card.wasted_cost_usd, 0)
         self.assertIsNone(card.cost_per_successful_task_usd)
 
     def test_generate_tracecard_report(self) -> None:

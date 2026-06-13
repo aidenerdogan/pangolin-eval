@@ -44,10 +44,12 @@ class ConfigValidationTest(unittest.TestCase):
     def test_parse_models_preserves_retry_config(self) -> None:
         data = valid_config()
         data["models"][0]["max_retries"] = 2
+        data["models"][0]["token_counter"] = "whitespace"
 
         models = parse_models(data)
 
         self.assertEqual(models[0].max_retries, 2)
+        self.assertEqual(models[0].token_counter, "whitespace")
 
     def test_parse_models_preserves_group_and_pricing_provenance(self) -> None:
         data = valid_config()
@@ -85,6 +87,19 @@ class ConfigValidationTest(unittest.TestCase):
         self.assertEqual(prompts[0].feature, "support")
         self.assertEqual(prompts[0].workflow, "refund")
         self.assertEqual(prompts[0].customer_user_hash, "user-hash")
+
+    def test_parse_prompts_preserves_evaluators(self) -> None:
+        data = valid_config()
+        data["prompts"][0]["evaluators"] = [
+            {"type": "regex", "value": "refunds?", "weight": 2},
+            {"type": "exact", "value": "refund policy", "case_sensitive": True},
+        ]
+
+        prompts = parse_prompts(data)
+
+        self.assertEqual(prompts[0].evaluators[0].type, "regex")
+        self.assertEqual(prompts[0].evaluators[0].weight, 2)
+        self.assertTrue(prompts[0].evaluators[1].case_sensitive)
 
     def test_parse_gates_returns_thresholds(self) -> None:
         data = valid_config()
@@ -135,6 +150,20 @@ class ConfigValidationTest(unittest.TestCase):
         data["models"][0]["max_retries"] = -1
 
         with self.assertRaisesRegex(ValueError, "max_retries"):
+            validate_config(data)
+
+    def test_rejects_unknown_token_counter(self) -> None:
+        data = valid_config()
+        data["models"][0]["token_counter"] = "mystery"
+
+        with self.assertRaisesRegex(ValueError, "unsupported token_counter"):
+            validate_config(data)
+
+    def test_rejects_invalid_evaluator(self) -> None:
+        data = valid_config()
+        data["prompts"][0]["evaluators"] = [{"type": "regex", "value": "["}]
+
+        with self.assertRaisesRegex(ValueError, "invalid regex"):
             validate_config(data)
 
     def test_rejects_unknown_gate(self) -> None:

@@ -53,18 +53,21 @@ class CliTest(unittest.TestCase):
                         temp_dir,
                         "--content-mode",
                         "metadata-only",
+                        "--html",
                     ]
                 )
 
             payload = json.loads(
                 (Path(temp_dir) / "report.json").read_text(encoding="utf-8")
             )
+            html_exists = (Path(temp_dir) / "report.html").exists()
 
         self.assertEqual(exit_code, 0)
         self.assertIn("Wrote JSON report", stdout.getvalue())
         self.assertEqual(payload["content_mode"], "metadata_only")
         self.assertIsNone(payload["results"][0]["response"])
         self.assertTrue(payload["results"][0]["metadata"]["response_content_omitted"])
+        self.assertTrue(html_exists)
 
     def test_run_command_returns_nonzero_when_gates_fail(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -112,18 +115,21 @@ class CliTest(unittest.TestCase):
                         temp_dir,
                         "--content-mode",
                         "metadata-only",
+                        "--html",
                     ]
                 )
 
             payload = json.loads(
                 (Path(temp_dir) / "rag_report.json").read_text(encoding="utf-8")
             )
+            html_exists = (Path(temp_dir) / "rag_report.html").exists()
 
         self.assertEqual(exit_code, 0)
         self.assertIn("Wrote RAG JSON report", stdout.getvalue())
         self.assertEqual(payload["schema_version"], "pangolin-eval.rag_report.v1")
         self.assertEqual(payload["content_mode"], "metadata_only")
         self.assertIsNone(payload["results"][0]["response"])
+        self.assertTrue(html_exists)
 
     def test_trace_command_writes_tracecards(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -137,17 +143,20 @@ class CliTest(unittest.TestCase):
                         "examples/agent_trace/trace_events.json",
                         "--out",
                         temp_dir,
+                        "--html",
                     ]
                 )
 
             payload = json.loads(
                 (Path(temp_dir) / "tracecards.json").read_text(encoding="utf-8")
             )
+            html_exists = (Path(temp_dir) / "tracecards.html").exists()
 
         self.assertEqual(exit_code, 0)
         self.assertIn("Wrote TraceCard JSON report", stdout.getvalue())
         self.assertEqual(payload["schema_version"], "pangolin-eval.tracecards.v1")
         self.assertEqual(len(payload["tracecards"]), 2)
+        self.assertTrue(html_exists)
 
     def test_export_otel_command_writes_spans(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

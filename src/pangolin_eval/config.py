@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
-from pangolin_eval.models import ModelTarget, PromptCase
+from pangolin_eval.models import (
+    SUPPORTED_EVALUATOR_TYPES,
+    SUPPORTED_TOKEN_COUNTERS,
+    ModelTarget,
+    PromptCase,
+    QualityEvaluator,
+)
 
 SUPPORTED_PROVIDERS = {"mock", "openai_compatible"}
 SUPPORTED_GATES = {
@@ -83,6 +90,14 @@ def validate_config(data: dict[str, Any]) -> None:
         _validate_optional_string(model, "pricing_source_url", f"Model {model_id}")
         _validate_optional_string(model, "pricing_updated_at", f"Model {model_id}")
         _validate_optional_string(model, "latency_band", f"Model {model_id}")
+        if "token_counter" in model:
+            token_counter = _require_string(model, "token_counter", f"Model {model_id}")
+            if token_counter not in SUPPORTED_TOKEN_COUNTERS:
+                supported = ", ".join(sorted(SUPPORTED_TOKEN_COUNTERS))
+                raise ValueError(
+                    f"Model {model_id} has unsupported token_counter "
+                    f"'{token_counter}'. Supported counters: {supported}."
+                )
 
         if "mock_latency_ms" in model:
             _require_non_negative_number(model, "mock_latency_ms", f"Model {model_id}")
@@ -125,6 +140,8 @@ def validate_config(data: dict[str, Any]) -> None:
                 "expected_keywords",
                 f"Prompt {prompt_id}",
             )
+        if "evaluators" in prompt:
+            _validate_evaluators(prompt["evaluators"], f"Prompt {prompt_id}")
         for field in [
             "feature",
             "workflow",
@@ -158,6 +175,7 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
         "supports_json_mode",
         "supports_multimodal",
         "latency_band",
+        "token_counter",
     }
     for raw in data["models"]:
         extra = {key: value for key, value in raw.items() if key not in known_fields}
@@ -183,6 +201,7 @@ def parse_models(data: dict[str, Any]) -> list[ModelTarget]:
                 supports_json_mode=bool(raw.get("supports_json_mode", False)),
                 supports_multimodal=bool(raw.get("supports_multimodal", False)),
                 latency_band=raw.get("latency_band"),
+                token_counter=raw.get("token_counter", "char_4"),
                 extra=extra,
             )
         )
@@ -197,6 +216,7 @@ def parse_prompts(data: dict[str, Any]) -> list[PromptCase]:
                 id=raw["id"],
                 messages=raw["messages"],
                 expected_keywords=list(raw.get("expected_keywords", [])),
+                evaluators=parse_evaluators(raw.get("evaluators", [])),
                 feature=raw.get("feature"),
                 workflow=raw.get("workflow"),
                 environment=raw.get("environment"),
@@ -205,6 +225,18 @@ def parse_prompts(data: dict[str, Any]) -> list[PromptCase]:
             )
         )
     return prompts
+
+
+def parse_evaluators(raw_evaluators: list[dict[str, Any]]) -> list[QualityEvaluator]:
+    return [
+        QualityEvaluator(
+            type=evaluator["type"],
+            value=evaluator["value"],
+            weight=float(evaluator.get("weight", 1.0)),
+            case_sensitive=bool(evaluator.get("case_sensitive", False)),
+        )
+        for evaluator in raw_evaluators
+    ]
 
 
 def parse_gates(data: dict[str, Any]) -> dict[str, float]:
@@ -320,3 +352,33 @@ def _validate_string_list(value: Any, field: str, owner: str) -> None:
     for item in value:
         if not isinstance(item, str) or not item.strip():
             raise ValueError(f"{owner} field '{field}' must contain only strings.")
+
+
+def _validate_evaluators(value: Any, owner: str) -> None:
+    if not isinstance(value, list) or not value:
+        raise ValueError(f"{owner} field 'evaluators' must be a non-empty list.")
+    for index, evaluator in enumerate(value, start=1):
+        evaluator_owner = f"{owner} evaluator {index}"
+        if not isinstance(evaluator, dict):
+            raise ValueError(f"{evaluator_owner} must be an object.")
+        evaluator_type = _require_string(evaluator, "type", evaluator_owner)
+        if evaluator_type not in SUPPORTED_EVALUATOR_TYPES:
+            supported = ", ".join(sorted(SUPPORTED_EVALUATOR_TYPES))
+            raise ValueError(
+                f"{evaluator_owner} has unsupported type '{evaluator_type}'. "
+                f"Supported evaluator types: {supported}."
+            )
+        evaluator_value = _require_string(evaluator, "value", evaluator_owner)
+        if evaluator_type == "regex":
+            try:
+                re.compile(evaluator_value)
+            except re.error as exc:
+                raise ValueError(
+                    f"{evaluator_owner} has invalid regex: {exc}."
+                ) from exc
+        if "weight" in evaluator:
+            weight = _require_non_negative_number(evaluator, "weight", evaluator_owner)
+            if weight == 0:
+                raise ValueError(f"{evaluator_owner} field 'weight' must be positive.")
+        if "case_sensitive" in evaluator:
+            _require_bool(evaluator, "case_sensitive", evaluator_owner)

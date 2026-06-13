@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from pangolin_eval.config import parse_models, validate_config
+from pangolin_eval.config import parse_evaluators, parse_models, validate_config
 from pangolin_eval.models import (
     ModelTarget,
     PromptCase,
@@ -14,7 +16,7 @@ from pangolin_eval.models import (
     RagResult,
 )
 from pangolin_eval.runner import complete_with_retries, provider_for
-from pangolin_eval.scoring import estimate_cost_usd, estimate_tokens, keyword_quality_score
+from pangolin_eval.scoring import estimate_cost_usd, estimate_tokens, prompt_quality_score
 
 
 def load_rag_config(path: str | Path) -> dict[str, Any]:
@@ -28,19 +30,25 @@ def load_rag_config(path: str | Path) -> dict[str, Any]:
 def validate_rag_config(data: dict[str, Any]) -> None:
     if not isinstance(data, dict):
         raise ValueError("RAG config must be a JSON object.")
+    base_prompts = []
+    for question in data.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        prompt_config = {
+            "id": question.get("id"),
+            "messages": [{"role": "user", "content": question.get("question", "")}],
+            "expected_keywords": question.get("expected_keywords", []),
+        }
+        if "evaluators" in question:
+            prompt_config["evaluators"] = question["evaluators"]
+        base_prompts.append(prompt_config)
     base_config = {
         "models": data.get("models"),
-        "prompts": [
-            {
-                "id": question.get("id"),
-                "messages": [{"role": "user", "content": question.get("question", "")}],
-                "expected_keywords": question.get("expected_keywords", []),
-            }
-            for question in data.get("questions", [])
-            if isinstance(question, dict)
-        ],
+        "prompts": base_prompts,
     }
     validate_config(base_config)
+    if "max_context_tokens" in data:
+        _require_non_negative_integer(data, "max_context_tokens", "RAG config")
 
     documents = data.get("documents")
     if not isinstance(documents, list) or not documents:
@@ -85,6 +93,7 @@ def parse_questions(data: dict[str, Any]) -> list[RagQuestion]:
             question=question["question"],
             context_ids=list(question["context_ids"]),
             expected_keywords=list(question.get("expected_keywords", [])),
+            evaluators=parse_evaluators(question.get("evaluators", [])),
             feature=question.get("feature"),
             workflow=question.get("workflow"),
             environment=question.get("environment"),
@@ -101,6 +110,7 @@ def run_rag_evaluation(
     documents: list[RagDocument],
     questions: list[RagQuestion],
     content_mode: str = "full",
+    max_context_tokens: int | None = None,
 ) -> RagReport:
     document_by_id = {document.id: document for document in documents}
     results: list[RagResult] = []
@@ -132,10 +142,15 @@ def run_rag_evaluation(
                 prompt_version=question.prompt_version,
             )
             completion, _, error, timed_out = complete_with_retries(provider, model, prompt)
-            context_tokens = estimate_tokens(context)
+            context_tokens = estimate_tokens(context, model.token_counter)
             unused_context_signal = unused_context_ratio(
                 context_documents,
                 question.expected_keywords,
+            )
+            repeated_context_signal = repeated_context_ratio(context_documents)
+            oversized_context = (
+                max_context_tokens is not None
+                and context_tokens > max_context_tokens
             )
             if error is not None:
                 results.append(
@@ -152,6 +167,9 @@ def run_rag_evaluation(
                         context_efficiency=None,
                         unused_context_signal=unused_context_signal,
                         missing_citation=True,
+                        oversized_context=oversized_context,
+                        repeated_context_signal=repeated_context_signal,
+                        cost_per_covered_answer_usd=None,
                         success=False,
                         status="timeout" if timed_out else "error",
                         error=error,
@@ -159,9 +177,10 @@ def run_rag_evaluation(
                 )
                 continue
 
-            answer_coverage = keyword_quality_score(
+            answer_coverage = prompt_quality_score(
                 completion.text,
                 question.expected_keywords,
+                question.evaluators,
             )
             faithfulness = faithfulness_score(
                 completion.text,
@@ -170,6 +189,17 @@ def run_rag_evaluation(
             )
             context_efficiency = (
                 (answer_coverage or 0) / max(context_tokens, 1) * 1000
+            )
+            estimated_cost = estimate_cost_usd(
+                completion.input_tokens,
+                completion.output_tokens,
+                model.input_price_per_1m,
+                model.output_price_per_1m,
+            )
+            cost_per_covered_answer = (
+                estimated_cost / answer_coverage
+                if answer_coverage and answer_coverage > 0
+                else None
             )
             response = None if content_mode == "metadata_only" else completion.text
             results.append(
@@ -180,12 +210,7 @@ def run_rag_evaluation(
                     retrieved_context_tokens=context_tokens,
                     answer_tokens=completion.output_tokens,
                     latency_ms=completion.latency_ms,
-                    estimated_cost_usd=estimate_cost_usd(
-                        completion.input_tokens,
-                        completion.output_tokens,
-                        model.input_price_per_1m,
-                        model.output_price_per_1m,
-                    ),
+                    estimated_cost_usd=estimated_cost,
                     answer_coverage=answer_coverage,
                     faithfulness_score=faithfulness,
                     context_efficiency=context_efficiency,
@@ -194,6 +219,9 @@ def run_rag_evaluation(
                         completion.text,
                         question.context_ids,
                     ),
+                    oversized_context=oversized_context,
+                    repeated_context_signal=repeated_context_signal,
+                    cost_per_covered_answer_usd=cost_per_covered_answer,
                 )
             )
 
@@ -249,6 +277,24 @@ def unused_context_ratio(
     return unused / len(documents)
 
 
+def repeated_context_ratio(documents: list[RagDocument]) -> float:
+    if not documents:
+        return 0
+
+    segments: list[str] = []
+    for document in documents:
+        for segment in re.split(r"[\n.]+", document.text.lower()):
+            normalized = " ".join(segment.split())
+            if normalized:
+                segments.append(normalized)
+    if not segments:
+        return 0
+
+    counts = Counter(segments)
+    repeated = sum(count - 1 for count in counts.values() if count > 1)
+    return min(1, repeated / len(segments))
+
+
 def cites_any_document(response: str, context_ids: list[str]) -> bool:
     response_lower = response.lower()
     return any(context_id.lower() in response_lower for context_id in context_ids)
@@ -258,4 +304,15 @@ def _require_string(data: dict[str, Any], field: str, owner: str) -> str:
     value = data.get(field)
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{owner} field '{field}' must be a non-empty string.")
+    return value
+
+
+def _require_non_negative_integer(
+    data: dict[str, Any],
+    field: str,
+    owner: str,
+) -> int:
+    value = data.get(field)
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError(f"{owner} field '{field}' must be a non-negative integer.")
     return value
