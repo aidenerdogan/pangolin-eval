@@ -31,6 +31,15 @@ PYTHONPATH=src python -m pangolin_eval.cli run \
   --out reports/simple_model_compare
 ```
 
+For sensitive runs, omit response text from saved artifacts while keeping metrics and quality scores:
+
+```bash
+PYTHONPATH=src python -m pangolin_eval.cli run \
+  --config examples/simple_model_compare/config.json \
+  --out reports/simple_model_compare_private \
+  --content-mode metadata-only
+```
+
 Open the generated report:
 
 ```bash
@@ -75,6 +84,8 @@ Version 0.1 focuses on the smallest useful artifact:
 - latency, token, and cost tracking
 - keyword-based quality scoring
 - Markdown and JSON reporting
+- versioned report schema
+- metadata-only report mode for privacy-conscious runs
 
 ## Planned Scope
 
@@ -84,6 +95,15 @@ Version 0.1 focuses on the smallest useful artifact:
 - OpenTelemetry traces
 - budget guardrails
 - CI gates for evaluation regression checks
+
+## Report Contract
+
+JSON reports declare a schema version and content mode:
+
+- `schema_version`: currently `pangolin-eval.report.v1`
+- `content_mode`: `full` or `metadata_only`
+
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md) and [schemas/report.v1.json](schemas/report.v1.json).
 
 ## Open-Core Direction
 

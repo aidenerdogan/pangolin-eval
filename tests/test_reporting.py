@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pangolin_eval.models import ModelSummary, PromptResult, RunReport
+from pangolin_eval.models import REPORT_SCHEMA_VERSION, ModelSummary, PromptResult, RunReport
 from pangolin_eval.reporting import render_markdown, write_reports
 
 
@@ -44,9 +44,37 @@ class ReportingTest(unittest.TestCase):
         markdown = render_markdown(sample_report())
 
         self.assertIn("# sample", markdown)
+        self.assertIn(f"- Schema version: `{REPORT_SCHEMA_VERSION}`", markdown)
+        self.assertIn("- Content mode: `full`", markdown)
         self.assertIn("| mock-model | 1 | 1.00 | 123 | 0.00000120 | 0.89 |", markdown)
         self.assertIn("### mock-model / case-1", markdown)
         self.assertIn("Use the refund policy.", markdown)
+
+    def test_render_markdown_notes_when_response_content_is_omitted(self) -> None:
+        report = sample_report()
+        report.results[0] = PromptResult(
+            prompt_id="case-1",
+            model_id="mock-model",
+            response=None,
+            input_tokens=10,
+            output_tokens=6,
+            latency_ms=123,
+            estimated_cost_usd=0.0000012,
+            quality_score=1.0,
+        )
+        report = RunReport(
+            run_name=report.run_name,
+            description=report.description,
+            results=report.results,
+            summaries=report.summaries,
+            content_mode="metadata_only",
+        )
+
+        markdown = render_markdown(report)
+
+        self.assertIn("- Content mode: `metadata_only`", markdown)
+        self.assertIn("Response content omitted", markdown)
+        self.assertNotIn("```text", markdown)
 
     def test_write_reports_writes_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -56,7 +84,19 @@ class ReportingTest(unittest.TestCase):
             self.assertEqual(markdown_path, Path(temp_dir) / "report.md")
             payload = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["run_name"], "sample")
+            self.assertEqual(payload["schema_version"], REPORT_SCHEMA_VERSION)
+            self.assertEqual(payload["content_mode"], "full")
             self.assertIn("## Model Summary", markdown_path.read_text(encoding="utf-8"))
+
+    def test_report_schema_file_matches_runtime_version(self) -> None:
+        schema = json.loads(
+            Path("schemas/report.v1.json").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            schema["properties"]["schema_version"]["const"],
+            REPORT_SCHEMA_VERSION,
+        )
 
 
 if __name__ == "__main__":

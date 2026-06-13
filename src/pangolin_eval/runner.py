@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from pangolin_eval.models import ModelSummary, ModelTarget, PromptCase, PromptResult, RunReport
+from pangolin_eval.models import (
+    SUPPORTED_CONTENT_MODES,
+    ModelSummary,
+    ModelTarget,
+    PromptCase,
+    PromptResult,
+    RunReport,
+)
 from pangolin_eval.providers import MockProvider, OpenAICompatibleProvider, Provider
 from pangolin_eval.scoring import estimate_cost_usd, keyword_quality_score
 
@@ -12,7 +19,14 @@ def run_comparison(
     description: str,
     models: list[ModelTarget],
     prompts: list[PromptCase],
+    content_mode: str = "full",
 ) -> RunReport:
+    if content_mode not in SUPPORTED_CONTENT_MODES:
+        supported = ", ".join(sorted(SUPPORTED_CONTENT_MODES))
+        raise ValueError(
+            f"Unsupported content mode '{content_mode}'. Supported modes: {supported}."
+        )
+
     results: list[PromptResult] = []
 
     for model in models:
@@ -26,17 +40,22 @@ def run_comparison(
                 model.input_price_per_1m,
                 model.output_price_per_1m,
             )
+            metadata = completion.metadata
+            response = completion.text
+            if content_mode == "metadata_only":
+                metadata = {**completion.metadata, "response_content_omitted": True}
+                response = None
             results.append(
                 PromptResult(
                     prompt_id=prompt.id,
                     model_id=model.id,
-                    response=completion.text,
+                    response=response,
                     input_tokens=completion.input_tokens,
                     output_tokens=completion.output_tokens,
                     latency_ms=completion.latency_ms,
                     estimated_cost_usd=estimated_cost,
                     quality_score=quality_score,
-                    metadata=completion.metadata,
+                    metadata=metadata,
                 )
             )
 
@@ -46,6 +65,7 @@ def run_comparison(
         description=description,
         results=results,
         summaries=summaries,
+        content_mode=content_mode,
     )
 
 

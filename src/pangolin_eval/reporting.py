@@ -26,6 +26,9 @@ def render_markdown(report: RunReport) -> str:
     lines = [
         f"# {report.run_name}",
         "",
+        f"- Schema version: `{report.schema_version}`",
+        f"- Content mode: `{report.content_mode}`",
+        "",
     ]
     if report.description:
         lines.extend([report.description, ""])
@@ -54,12 +57,24 @@ def render_markdown(report: RunReport) -> str:
                 f"- Output tokens: {result.output_tokens}",
                 f"- Estimated cost: ${result.estimated_cost_usd:.8f}",
                 "",
-                "```text",
-                result.response,
-                "```",
-                "",
             ]
         )
+        if result.response is None:
+            lines.extend(
+                [
+                    "_Response content omitted because content mode is metadata_only._",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    "```text",
+                    result.response,
+                    "```",
+                    "",
+                ]
+            )
     return "\n".join(lines)
 
 

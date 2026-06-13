@@ -5,6 +5,8 @@ from typing import Any
 
 
 Message = dict[str, str]
+REPORT_SCHEMA_VERSION = "pangolin-eval.report.v1"
+SUPPORTED_CONTENT_MODES = {"full", "metadata_only"}
 
 
 @dataclass(frozen=True)
@@ -41,7 +43,7 @@ class Completion:
 class PromptResult:
     prompt_id: str
     model_id: str
-    response: str
+    response: str | None
     input_tokens: int
     output_tokens: int
     latency_ms: int
@@ -67,3 +69,5 @@ class RunReport:
     description: str
     results: list[PromptResult]
     summaries: list[ModelSummary]
+    schema_version: str = REPORT_SCHEMA_VERSION
+    content_mode: str = "full"

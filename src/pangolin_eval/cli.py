@@ -27,6 +27,15 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Output directory for report.json and report.md.",
     )
+    run_parser.add_argument(
+        "--content-mode",
+        choices=["full", "metadata-only"],
+        default="full",
+        help=(
+            "Use 'metadata-only' to omit response text from saved reports while "
+            "keeping metrics and scores."
+        ),
+    )
 
     validate_parser = subparsers.add_parser(
         "validate",
@@ -46,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "run":
-            return run_command(Path(args.config), Path(args.out))
+            return run_command(Path(args.config), Path(args.out), args.content_mode)
         if args.command == "validate":
             return validate_command(Path(args.config))
     except (OSError, ValueError, RuntimeError) as exc:
@@ -57,13 +66,15 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
-def run_command(config_path: Path, out_dir: Path) -> int:
+def run_command(config_path: Path, out_dir: Path, content_mode: str = "full") -> int:
     config = load_config(config_path)
+    normalized_content_mode = content_mode.replace("-", "_")
     report = run_comparison(
         run_name=config.get("run_name", config_path.stem),
         description=config.get("description", ""),
         models=parse_models(config),
         prompts=parse_prompts(config),
+        content_mode=normalized_content_mode,
     )
     json_path, markdown_path = write_reports(report, out_dir)
     print(f"Wrote JSON report: {json_path}")
