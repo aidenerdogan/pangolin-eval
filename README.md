@@ -129,6 +129,8 @@ The current local open-source version includes:
 
 ## Project Status
 
+Current release target: `v0.1.0`.
+
 The planned local open-source scope is implemented for the current release track:
 weighted evaluator plugins, configurable token counters, additional gateway examples,
 RAG and agent diagnostics, and optional static HTML reports are available. Future work
@@ -142,7 +144,7 @@ JSON reports declare a schema version and content mode:
 - `schema_version`: currently `pangolin-eval.report.v4`
 - `content_mode`: `full` or `metadata_only`
 
-See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [docs/EXTENSIONS.md](docs/EXTENSIONS.md), and the files under [schemas/](schemas).
+See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [docs/EXTENSIONS.md](docs/EXTENSIONS.md), [docs/RELEASE.md](docs/RELEASE.md), and the files under [schemas/](schemas).
 
 ## Local Demo With Docker
 
