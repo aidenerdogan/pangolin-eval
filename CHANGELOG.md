@@ -2,6 +2,23 @@
 
 All notable public changes are documented here.
 
+## v0.2.0 - 2026-06-15
+
+Post-release polish focused on public contract readiness.
+
+### Added
+
+- Public compatibility policy for CLI, config, report, RAG, TraceCard, pricing, and export contracts.
+- Migration notes for moving from `v0.1.0` to `v0.2.0`.
+- CI-gate example config demonstrating budget, latency, quality, and reliability thresholds.
+- Version-consistency regression coverage for package metadata.
+- `v0.2.0` release notes.
+
+### Changed
+
+- Package version updated to `0.2.0`.
+- CI validates the CI-gate example.
+
 ## v0.1.0 - 2026-06-14
 
 Initial public release of `pangolin-eval`.

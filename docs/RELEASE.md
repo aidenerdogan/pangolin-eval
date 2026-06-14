@@ -4,7 +4,7 @@ This document describes the public release path for `pangolin-eval`.
 
 ## Versioning
 
-The first public release is `v0.1.0`.
+The latest public release target is `v0.2.0`.
 
 Keep these version values in sync before tagging:
 
@@ -22,11 +22,13 @@ Run from the repository root:
 PYTHONPATH=src python3 -m unittest discover -s tests
 find schemas examples -name '*.json' -print0 | xargs -0 -n1 python3 -m json.tool >/dev/null
 PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/simple_model_compare/config.json
+PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/ci_gate/config.json
 PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/openai_compatible/config.json
 PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/litellm_gateway/config.json
 PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/ollama_openai_compatible/config.json
 PYTHONPATH=src python3 -m pangolin_eval.cli validate --config examples/vllm_openai_compatible/config.json
 PYTHONPATH=src python3 -m pangolin_eval.cli run --config examples/simple_model_compare/config.json --out reports/simple_model_compare --content-mode metadata-only --html
+PYTHONPATH=src python3 -m pangolin_eval.cli run --config examples/ci_gate/config.json --out reports/ci_gate --content-mode metadata-only --html
 PYTHONPATH=src python3 -m pangolin_eval.cli rag --config examples/rag_eval/config.json --out reports/rag_eval --content-mode metadata-only --html
 PYTHONPATH=src python3 -m pangolin_eval.cli trace --input examples/agent_trace/trace_events.json --out reports/agent_trace --html
 PYTHONPATH=src python3 -m pangolin_eval.cli export-otel --input reports/simple_model_compare/report.json --out reports/simple_model_compare/otel.json
@@ -49,8 +51,8 @@ Before tagging, confirm:
 Create and push an annotated tag:
 
 ```bash
-git tag -a v0.1.0 -m "pangolin-eval v0.1.0"
-git push origin v0.1.0
+git tag -a v0.2.0 -m "pangolin-eval v0.2.0"
+git push origin v0.2.0
 ```
 
 The tag-driven release workflow builds source and wheel distributions, verifies the
