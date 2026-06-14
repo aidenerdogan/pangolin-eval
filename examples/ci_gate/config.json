@@ -1,0 +1,63 @@
+{
+  "run_name": "ci-gate-demo",
+  "description": "No-key CI gate example with budget, latency, quality, and reliability thresholds.",
+  "models": [
+    {
+      "id": "ci-baseline",
+      "provider": "mock",
+      "model_group": "baseline",
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "mock_latency_ms": 120,
+      "mock_responses": {
+        "release-readiness": "A release gate should check quality, latency, cost, and reliability before publishing.",
+        "sensitive-reporting": "Use metadata-only reporting when prompts or responses may contain sensitive customer content."
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "id": "release-readiness",
+      "feature": "release",
+      "workflow": "ci-gate",
+      "environment": "ci",
+      "prompt_version": "ci-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What should a release gate check before publishing an AI workflow?"
+        }
+      ],
+      "expected_keywords": ["quality", "latency", "cost", "reliability"]
+    },
+    {
+      "id": "sensitive-reporting",
+      "feature": "privacy",
+      "workflow": "reporting",
+      "environment": "ci",
+      "prompt_version": "ci-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "When should metadata-only reporting be used?"
+        }
+      ],
+      "evaluators": [
+        {
+          "type": "contains",
+          "value": "metadata-only"
+        },
+        {
+          "type": "regex",
+          "value": "sensitive|private|confidential"
+        }
+      ]
+    }
+  ],
+  "gates": {
+    "max_total_cost_usd": 0.001,
+    "max_avg_latency_ms": 250,
+    "min_avg_quality": 1.0,
+    "min_success_rate": 1.0
+  }
+}

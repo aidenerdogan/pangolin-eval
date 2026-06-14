@@ -36,6 +36,7 @@ jobs:
       - name: Validate example configs
         run: |
           PYTHONPATH=src python -m pangolin_eval.cli validate --config examples/simple_model_compare/config.json
+          PYTHONPATH=src python -m pangolin_eval.cli validate --config examples/ci_gate/config.json
           PYTHONPATH=src python -m pangolin_eval.cli validate --config examples/openai_compatible/config.json
           PYTHONPATH=src python -m pangolin_eval.cli validate --config examples/litellm_gateway/config.json
           PYTHONPATH=src python -m pangolin_eval.cli validate --config examples/ollama_openai_compatible/config.json
@@ -44,6 +45,7 @@ jobs:
       - name: Run CLI smoke checks
         run: |
           PYTHONPATH=src python -m pangolin_eval.cli run --config examples/simple_model_compare/config.json --out reports/simple_model_compare --content-mode metadata-only --html
+          PYTHONPATH=src python -m pangolin_eval.cli run --config examples/ci_gate/config.json --out reports/ci_gate --content-mode metadata-only --html
           PYTHONPATH=src python -m pangolin_eval.cli rag --config examples/rag_eval/config.json --out reports/rag_eval --content-mode metadata-only --html
           PYTHONPATH=src python -m pangolin_eval.cli trace --input examples/agent_trace/trace_events.json --out reports/agent_trace --html
           PYTHONPATH=src python -m pangolin_eval.cli export-otel --input reports/simple_model_compare/report.json --out reports/simple_model_compare/otel.json
