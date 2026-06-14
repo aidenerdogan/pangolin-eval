@@ -150,6 +150,24 @@ class ReportingTest(unittest.TestCase):
         self.assertIn("Response content omitted", markdown)
         self.assertNotIn("```text", markdown)
 
+    def test_render_markdown_uses_longer_fence_for_backticks(self) -> None:
+        report = sample_report()
+        report.results[0] = PromptResult(
+            prompt_id="case-1",
+            model_id="mock-model",
+            response="Here is a fence:\n```text\nescaped\n```",
+            input_tokens=10,
+            output_tokens=6,
+            latency_ms=123,
+            estimated_cost_usd=0.0000012,
+            quality_score=1.0,
+        )
+
+        markdown = render_markdown(report)
+
+        self.assertIn("````text", markdown)
+        self.assertIn("\n````\n", markdown)
+
     def test_write_reports_writes_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             json_path, markdown_path = write_reports(sample_report(), temp_dir)

@@ -49,6 +49,9 @@
           },
           "token_counter": {
             "enum": ["char_4", "whitespace", "openai_chat"]
+          },
+          "allow_unsafe_api_key_env": {
+            "type": "boolean"
           }
         },
         "additionalProperties": true

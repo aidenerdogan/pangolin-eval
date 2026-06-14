@@ -15,6 +15,12 @@ Provider configs can set `token_counter` to choose the fallback estimator used w
 provider response does not include usage. Supported counters are `char_4`, `whitespace`,
 and `openai_chat`.
 
+OpenAI-compatible provider configs use safe connection defaults: `base_url` must use
+HTTPS unless it points to loopback, and `api_key_env` must be a known safe
+API key/host pairing or start with `PANGOLIN_EVAL_`. Custom names or
+non-default hosts can be enabled with `allow_unsafe_api_key_env: true` for
+trusted local configs.
+
 ## Evaluators
 
 Prompt configs can combine legacy `expected_keywords` with weighted `evaluators`.
@@ -26,6 +32,8 @@ Built-in evaluator types are:
 - `exact`: whole-response exact match after trimming whitespace
 
 Evaluator entries support optional `weight` and `case_sensitive` fields.
+Regex patterns are limited to 256 characters and nested quantifiers are rejected
+to reduce excessive-runtime risk.
 
 ## Report Artifacts
 
