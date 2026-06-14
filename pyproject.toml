@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Measure LLM workloads across cost, latency, quality, and reliability."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Aiden Ahmet Erdogan" }
 ]
@@ -16,7 +17,6 @@ keywords = ["llm", "llmops", "rag", "ai", "cost", "evaluation", "observability"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -26,6 +26,12 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/aidenerdogan/pangolin-eval"
+Repository = "https://github.com/aidenerdogan/pangolin-eval"
+Issues = "https://github.com/aidenerdogan/pangolin-eval/issues"
+Changelog = "https://github.com/aidenerdogan/pangolin-eval/blob/main/CHANGELOG.md"
 
 [project.scripts]
 pangolin-eval = "pangolin_eval.cli:main"
