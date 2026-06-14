@@ -12,6 +12,7 @@ from pangolin_eval.models import (
     PromptCase,
     QualityEvaluator,
 )
+from pangolin_eval.safety import validate_openai_connection_security
 
 SUPPORTED_PROVIDERS = {"mock", "openai_compatible"}
 SUPPORTED_GATES = {
@@ -111,6 +112,8 @@ def validate_config(data: dict[str, Any]) -> None:
             )
         if "price_override" in model:
             _require_bool(model, "price_override", f"Model {model_id}")
+        if "allow_unsafe_api_key_env" in model:
+            _require_bool(model, "allow_unsafe_api_key_env", f"Model {model_id}")
         for field in [
             "supports_tools",
             "supports_structured_output",
@@ -122,8 +125,14 @@ def validate_config(data: dict[str, Any]) -> None:
         if "mock_responses" in model:
             _validate_mock_responses(model["mock_responses"], model_id)
         if provider == "openai_compatible":
-            _require_string(model, "base_url", f"Model {model_id}")
-            _require_string(model, "api_key_env", f"Model {model_id}")
+            base_url = _require_string(model, "base_url", f"Model {model_id}")
+            api_key_env = _require_string(model, "api_key_env", f"Model {model_id}")
+            validate_openai_connection_security(
+                base_url=base_url,
+                api_key_env=api_key_env,
+                owner=f"Model {model_id}",
+                allow_unsafe_api_key_env=model.get("allow_unsafe_api_key_env") is True,
+            )
 
     for prompt in prompts:
         if not isinstance(prompt, dict):
@@ -376,9 +385,90 @@ def _validate_evaluators(value: Any, owner: str) -> None:
                 raise ValueError(
                     f"{evaluator_owner} has invalid regex: {exc}."
                 ) from exc
+            _validate_safe_regex(evaluator_value, evaluator_owner)
         if "weight" in evaluator:
             weight = _require_non_negative_number(evaluator, "weight", evaluator_owner)
             if weight == 0:
                 raise ValueError(f"{evaluator_owner} field 'weight' must be positive.")
         if "case_sensitive" in evaluator:
             _require_bool(evaluator, "case_sensitive", evaluator_owner)
+
+
+def _validate_safe_regex(pattern: str, owner: str) -> None:
+    if len(pattern) > 256:
+        raise ValueError(f"{owner} regex must be 256 characters or fewer.")
+    if _contains_nested_quantifier(pattern):
+        raise ValueError(
+            f"{owner} regex contains nested quantifiers that can cause excessive runtime."
+        )
+
+
+def _contains_nested_quantifier(pattern: str) -> bool:
+    in_class = False
+    escaped = False
+    group_syntax_until = 0
+    group_has_quantifier: list[bool] = []
+
+    for index, char in enumerate(pattern):
+        if index < group_syntax_until:
+            continue
+        if escaped:
+            escaped = False
+            continue
+        if char == "\\":
+            escaped = True
+            continue
+        if char == "[":
+            in_class = True
+            continue
+        if char == "]":
+            in_class = False
+            continue
+        if in_class:
+            continue
+        if char == "(":
+            group_has_quantifier.append(False)
+            if pattern[index + 1 : index + 2] == "?":
+                group_syntax_until = _group_syntax_end(pattern, index)
+            continue
+        if char in "*+?" or (char == "{" and _starts_repetition_quantifier(pattern, index)):
+            if group_has_quantifier:
+                group_has_quantifier[-1] = True
+            continue
+        if char == ")" and group_has_quantifier:
+            inner_has_quantifier = group_has_quantifier.pop()
+            if not inner_has_quantifier:
+                continue
+            next_char = pattern[index + 1 : index + 2]
+            if next_char in {"*", "+", "?", "{"}:
+                return True
+            if group_has_quantifier:
+                group_has_quantifier[-1] = True
+    return False
+
+
+def _starts_repetition_quantifier(pattern: str, open_index: int) -> bool:
+    index = open_index + 1
+    if index >= len(pattern) or not pattern[index].isdigit():
+        return False
+    while index < len(pattern) and pattern[index].isdigit():
+        index += 1
+    if index < len(pattern) and pattern[index] == ",":
+        index += 1
+        while index < len(pattern) and pattern[index].isdigit():
+            index += 1
+    return index < len(pattern) and pattern[index] == "}"
+
+
+def _group_syntax_end(pattern: str, open_index: int) -> int:
+    if pattern[open_index + 1 : open_index + 2] != "?":
+        return open_index + 1
+    if pattern[open_index + 2 : open_index + 3] in {":", "=", "!"}:
+        return open_index + 3
+    if pattern[open_index + 2 : open_index + 3] == "<":
+        if pattern[open_index + 3 : open_index + 4] in {"=", "!"}:
+            return open_index + 4
+        close_index = pattern.find(">", open_index + 3)
+        if close_index != -1:
+            return close_index + 1
+    return open_index + 1

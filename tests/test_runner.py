@@ -83,6 +83,26 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(report.results[0].quality_score, 1.0)
         self.assertTrue(report.results[0].metadata["response_content_omitted"])
 
+    def test_mock_provider_preserves_empty_response(self) -> None:
+        report = run_comparison(
+            run_name="test",
+            description="",
+            models=[
+                ModelTarget(
+                    id="mock-model",
+                    provider="mock",
+                    input_price_per_1m=0.1,
+                    output_price_per_1m=0.2,
+                    mock_response="fallback",
+                    extra={"mock_responses": {"case-1": ""}},
+                )
+            ],
+            prompts=[PromptCase(id="case-1", messages=[{"role": "user", "content": "Hi"}])],
+        )
+
+        self.assertEqual(report.results[0].response, "")
+        self.assertEqual(report.results[0].output_tokens, 0)
+
     def test_provider_failure_is_reported_without_aborting_run(self) -> None:
         report = run_comparison(
             run_name="test",

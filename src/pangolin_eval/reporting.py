@@ -201,14 +201,7 @@ def render_markdown(report: RunReport) -> str:
                 ]
             )
         else:
-            lines.extend(
-                [
-                    "```text",
-                    result.response,
-                    "```",
-                    "",
-                ]
-            )
+            lines.extend(render_text_fence(result.response))
     return "\n".join(lines)
 
 
@@ -273,7 +266,7 @@ def render_rag_markdown(report: RagReport) -> str:
                 ]
             )
         else:
-            lines.extend(["```text", result.response, "```", ""])
+            lines.extend(render_text_fence(result.response))
     return "\n".join(lines)
 
 
@@ -552,3 +545,20 @@ def format_optional_cost(value: float | None) -> str:
     if value is None:
         return "n/a"
     return f"{value:.8f}"
+
+
+def render_text_fence(text: str) -> list[str]:
+    fence = "`" * max(3, longest_backtick_run(text) + 1)
+    return [f"{fence}text", text, fence, ""]
+
+
+def longest_backtick_run(text: str) -> int:
+    longest = 0
+    current = 0
+    for char in text:
+        if char == "`":
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    return longest

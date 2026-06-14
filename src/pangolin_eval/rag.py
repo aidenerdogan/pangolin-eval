@@ -14,6 +14,7 @@ from pangolin_eval.models import (
     RagQuestion,
     RagReport,
     RagResult,
+    SUPPORTED_CONTENT_MODES,
 )
 from pangolin_eval.runner import complete_with_retries, provider_for
 from pangolin_eval.scoring import estimate_cost_usd, estimate_tokens, prompt_quality_score
@@ -31,7 +32,12 @@ def validate_rag_config(data: dict[str, Any]) -> None:
     if not isinstance(data, dict):
         raise ValueError("RAG config must be a JSON object.")
     base_prompts = []
-    for question in data.get("questions", []):
+    raw_questions = data.get("questions", [])
+    if isinstance(raw_questions, list):
+        for index, question in enumerate(raw_questions, start=1):
+            if not isinstance(question, dict):
+                raise ValueError(f"RAG question {index} must be an object.")
+    for question in raw_questions:
         if not isinstance(question, dict):
             continue
         prompt_config = {
@@ -67,12 +73,18 @@ def validate_rag_config(data: dict[str, Any]) -> None:
     if not isinstance(questions, list) or not questions:
         raise ValueError("RAG config must include a non-empty 'questions' list.")
     for index, question in enumerate(questions, start=1):
+        if not isinstance(question, dict):
+            raise ValueError(f"RAG question {index} must be an object.")
         _require_string(question, "id", f"RAG question {index}")
         _require_string(question, "question", f"RAG question {index}")
         context_ids = question.get("context_ids")
         if not isinstance(context_ids, list) or not context_ids:
             raise ValueError(f"RAG question {index} must include context_ids.")
         for context_id in context_ids:
+            if not isinstance(context_id, str) or not context_id.strip():
+                raise ValueError(
+                    f"RAG question {index} context_ids must contain only strings."
+                )
             if context_id not in document_ids:
                 raise ValueError(
                     f"RAG question {index} references unknown document '{context_id}'."
@@ -112,6 +124,11 @@ def run_rag_evaluation(
     content_mode: str = "full",
     max_context_tokens: int | None = None,
 ) -> RagReport:
+    if content_mode not in SUPPORTED_CONTENT_MODES:
+        supported = ", ".join(sorted(SUPPORTED_CONTENT_MODES))
+        raise ValueError(
+            f"Unsupported content mode '{content_mode}'. Supported modes: {supported}."
+        )
     document_by_id = {document.id: document for document in documents}
     results: list[RagResult] = []
 

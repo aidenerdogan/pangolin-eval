@@ -44,6 +44,7 @@ pangolin-eval run \
 - `usage_source` distinguishes provider-reported usage from estimated usage.
 - `token_counter` can be set per model for estimated usage fallback when provider usage is unavailable.
 - Quality scoring can combine `expected_keywords` with weighted `keyword`, `contains`, `regex`, and `exact` evaluators.
+- Regex evaluators are bounded: patterns must be at most 256 characters and nested quantifiers are rejected.
 - Prompt results can include attribution fields: `feature`, `workflow`, `environment`, `prompt_version`, and `customer_user_hash`.
 - Pricing provenance fields include `pricing_source`, `pricing_source_url`, and `pricing_updated_at`.
 - `aggregations` summarizes cost, quality, latency, and reliability by model, prompt, feature, workflow, environment, prompt version, and model group.
@@ -60,6 +61,12 @@ schema_version: pangolin-eval.pricing.v1
 ```
 
 Set `pricing_catalog` in a config file to load catalog prices and provenance. Add `price_override: true` on a model entry to keep model-level prices instead of applying the catalog.
+
+OpenAI-compatible configs restrict credential forwarding by default. Use HTTPS
+provider URLs unless targeting loopback, and use a known safe API key/host
+pairing or the `PANGOLIN_EVAL_` prefix. Set `allow_unsafe_api_key_env: true`
+only for trusted local configs that need a custom environment variable name or
+non-default host.
 
 ## RAG Report
 

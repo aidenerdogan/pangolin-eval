@@ -180,6 +180,7 @@ Model entries include:
 - `token_counter`: estimated usage fallback, one of `char_4`, `whitespace`, or `openai_chat`
 - `pricing_source`, `pricing_source_url`, `pricing_updated_at`: pricing provenance
 - capability metadata such as `context_window_tokens`, `supports_tools`, `supports_json_mode`, and `latency_band`
+- `allow_unsafe_api_key_env`: opt-in escape hatch for custom API key environment variable names or non-default provider hosts; by default OpenAI-compatible configs only allow known safe API key/host pairings or the `PANGOLIN_EVAL_` prefix, and `base_url` must use HTTPS unless it points to loopback
 
 Prompt entries include:
 
@@ -199,6 +200,10 @@ Evaluator example:
   ]
 }
 ```
+
+Regex evaluators are intentionally constrained: patterns must be at most 256
+characters and nested quantifiers are rejected to avoid excessive runtime on
+untrusted responses.
 
 Gate examples:
 

@@ -9,6 +9,7 @@ from pangolin_eval.rag import (
     repeated_context_ratio,
     run_rag_evaluation,
     unused_context_ratio,
+    validate_rag_config,
 )
 
 
@@ -54,6 +55,70 @@ class RagTest(unittest.TestCase):
         self.assertFalse(result.missing_citation)
         self.assertTrue(result.oversized_context)
         self.assertIsNotNone(result.cost_per_covered_answer_usd)
+
+    def test_rag_evaluation_rejects_invalid_content_mode(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Unsupported content mode"):
+            run_rag_evaluation(
+                run_name="rag",
+                description="",
+                models=[
+                    ModelTarget(
+                        id="mock-model",
+                        provider="mock",
+                        input_price_per_1m=0.1,
+                        output_price_per_1m=0.2,
+                    )
+                ],
+                documents=[RagDocument(id="doc-1", text="Refund policy.")],
+                questions=[
+                    RagQuestion(
+                        id="case-1",
+                        question="What is the policy?",
+                        context_ids=["doc-1"],
+                    )
+                ],
+                content_mode="metadata-only",
+            )
+
+    def test_validate_rag_config_rejects_non_object_question(self) -> None:
+        with self.assertRaisesRegex(ValueError, "RAG question 1 must be an object"):
+            validate_rag_config(
+                {
+                    "models": [
+                        {
+                            "id": "mock-model",
+                            "provider": "mock",
+                            "input_price_per_1m": 0.1,
+                            "output_price_per_1m": 0.2,
+                        }
+                    ],
+                    "documents": [{"id": "doc-1", "text": "Refund policy."}],
+                    "questions": ["not-an-object"],
+                }
+            )
+
+    def test_validate_rag_config_rejects_non_string_context_id(self) -> None:
+        with self.assertRaisesRegex(ValueError, "context_ids must contain only strings"):
+            validate_rag_config(
+                {
+                    "models": [
+                        {
+                            "id": "mock-model",
+                            "provider": "mock",
+                            "input_price_per_1m": 0.1,
+                            "output_price_per_1m": 0.2,
+                        }
+                    ],
+                    "documents": [{"id": "doc-1", "text": "Refund policy."}],
+                    "questions": [
+                        {
+                            "id": "case-1",
+                            "question": "What is the policy?",
+                            "context_ids": [123],
+                        }
+                    ],
+                }
+            )
 
     def test_rag_helpers_flag_missing_citation_and_unused_context(self) -> None:
         self.assertTrue(cites_any_document("Use [doc-1].", ["doc-1"]))
