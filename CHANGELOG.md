@@ -2,6 +2,15 @@
 
 All notable public changes are documented here.
 
+## v0.2.1 - 2026-06-15
+
+Maintenance release for GitHub Actions runtime compatibility.
+
+### Changed
+
+- Updated pinned `actions/checkout` and `actions/setup-python` SHAs to Node 24-compatible versions.
+- Package version updated to `0.2.1`.
+
 ## v0.2.0 - 2026-06-15
 
 Post-release polish focused on public contract readiness.
