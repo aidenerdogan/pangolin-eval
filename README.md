@@ -129,7 +129,7 @@ The current local open-source version includes:
 
 ## Project Status
 
-Current release target: `v0.2.0`.
+Latest release: `v0.2.2`.
 
 The planned local open-source scope is implemented for the current release track:
 weighted evaluator plugins, configurable token counters, additional gateway examples,
@@ -145,6 +145,11 @@ JSON reports declare a schema version and content mode:
 - `content_mode`: `full` or `metadata_only`
 
 See [docs/REPORT_SCHEMA.md](docs/REPORT_SCHEMA.md), [docs/EXTENSIONS.md](docs/EXTENSIONS.md), [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), [docs/MIGRATIONS.md](docs/MIGRATIONS.md), [docs/RELEASE.md](docs/RELEASE.md), and the files under [schemas/](schemas).
+
+## Support And Feedback
+
+Use [SUPPORT.md](SUPPORT.md) for the best path to ask questions, report bugs, or suggest integrations.
+See [docs/LAUNCH.md](docs/LAUNCH.md) for launch notes, suggested demo flows, and copy that explains the project clearly.
 
 ## Local Demo With Docker
 

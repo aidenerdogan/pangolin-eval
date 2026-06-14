@@ -5,6 +5,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+from pangolin_eval import __version__
 from pangolin_eval.config import load_config, parse_gates, parse_models, parse_prompts
 from pangolin_eval.exports import load_json_artifact, write_otel_export
 from pangolin_eval.gates import evaluate_gates, gates_passed
@@ -32,6 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pangolin-eval",
         description="Compare LLM workloads by cost, latency, and quality.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
