@@ -7,10 +7,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pangolin_eval
 from pangolin_eval.cli import main
 
 
 class CliTest(unittest.TestCase):
+    def test_version_flag_prints_package_version(self) -> None:
+        stdout = io.StringIO()
+
+        with contextlib.redirect_stdout(stdout):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--version"])
+
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn(pangolin_eval.__version__, stdout.getvalue())
+
     def test_validate_command_accepts_example_config(self) -> None:
         stdout = io.StringIO()
 

@@ -2,6 +2,22 @@
 
 All notable public changes are documented here.
 
+## v0.2.2 - 2026-06-15
+
+Launch-support release with public feedback and support materials.
+
+### Added
+
+- Public `SUPPORT.md` with issue guidance and privacy reminders.
+- `docs/LAUNCH.md` with launch positioning, demo flow, and launch-post draft.
+- GitHub issue templates for bug reports, integration requests, and report feedback.
+- `pangolin-eval --version` for easier issue diagnostics.
+
+### Changed
+
+- README project status now points at the current release line.
+- Package version updated to `0.2.2`.
+
 ## v0.2.1 - 2026-06-15
 
 Maintenance release for GitHub Actions runtime compatibility.
