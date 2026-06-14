@@ -4,7 +4,7 @@ This document describes the public release path for `pangolin-eval`.
 
 ## Versioning
 
-The latest public release target is `v0.2.0`.
+The latest public release target is `v0.2.1`.
 
 Keep these version values in sync before tagging:
 
@@ -51,8 +51,8 @@ Before tagging, confirm:
 Create and push an annotated tag:
 
 ```bash
-git tag -a v0.2.0 -m "pangolin-eval v0.2.0"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "pangolin-eval v0.2.1"
+git push origin v0.2.1
 ```
 
 The tag-driven release workflow builds source and wheel distributions, verifies the

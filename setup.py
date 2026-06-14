@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="pangolin-eval",
-    version="0.2.0",
+    version="0.2.1",
     description="Measure LLM workloads across cost, latency, quality, and reliability.",
     package_dir={"": "src"},
     packages=find_packages("src"),
