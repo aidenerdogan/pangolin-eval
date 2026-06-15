@@ -2,7 +2,9 @@
 
 All notable public changes are documented here.
 
-## Unreleased
+## v0.2.3 - 2026-06-15
+
+Pre-publication hardening release for safer public sharing.
 
 ### Added
 
@@ -12,6 +14,7 @@ All notable public changes are documented here.
 
 - Live-provider README examples now default to `metadata-only` report content.
 - Release and CI package build commands pin `build`.
+- Package version updated to `0.2.3`.
 
 ### Security And Safety
 

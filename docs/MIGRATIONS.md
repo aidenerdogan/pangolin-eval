@@ -20,7 +20,7 @@ No breaking changes are expected.
 - If you automate around generated JSON, continue branching on `schema_version`.
 - If you install from GitHub Releases, update local wheel references from `0.1.0` to the latest `v0.2.x` release.
 
-## v0.2.0 to v0.2.2
+## v0.2.0 to v0.2.3
 
 No breaking changes are expected.
 
@@ -28,6 +28,7 @@ No breaking changes are expected.
 
 - `v0.2.1` updated pinned GitHub Actions to Node 24-compatible versions.
 - `v0.2.2` added support docs, launch notes, issue templates, and `pangolin-eval --version`.
+- `v0.2.3` added a public security policy, hardened Markdown table rendering, pinned Python build tooling, and made live-provider examples default to `metadata-only`.
 
 ### Recommended Action
 

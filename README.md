@@ -129,7 +129,7 @@ The current local open-source version includes:
 
 ## Project Status
 
-Latest release: `v0.2.2`.
+Latest release: `v0.2.3`.
 
 The planned local open-source scope is implemented for the current release track:
 weighted evaluator plugins, configurable token counters, additional gateway examples,
