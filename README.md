@@ -245,8 +245,15 @@ Then run:
 
 ```bash
 export OPENAI_API_KEY="..."
-pangolin-eval run --config path/to/config.json --out reports/live
+pangolin-eval run \
+  --config path/to/config.json \
+  --out reports/live \
+  --content-mode metadata-only
 ```
+
+`full` content mode stores model response text in saved report artifacts. Use
+`metadata-only` for real evaluations unless the prompts and responses are safe
+to store and share.
 
 Additional templates:
 

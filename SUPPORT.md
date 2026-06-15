@@ -23,7 +23,7 @@ Do not paste API keys, private prompts, customer data, retrieved documents, logs
 
 ## Security Or Privacy
 
-If you suspect a credential leak, unsafe provider behavior, report redaction problem, or another security/privacy issue, do not open a public issue with sensitive details. Open a minimal public issue saying there is a security concern and avoid sharing secrets or customer data.
+If you suspect a credential leak, unsafe provider behavior, report redaction problem, or another security/privacy issue, follow [SECURITY.md](SECURITY.md). Do not open a public issue with sensitive details, secrets, private prompts, or customer data.
 
 ## Commercial Help
 

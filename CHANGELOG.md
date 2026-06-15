@@ -2,6 +2,21 @@
 
 All notable public changes are documented here.
 
+## Unreleased
+
+### Added
+
+- Public `SECURITY.md` with a private vulnerability reporting path and sensitive-data guidance.
+
+### Changed
+
+- Live-provider README examples now default to `metadata-only` report content.
+- Release and CI package build commands pin `build`.
+
+### Security And Safety
+
+- Escaped user-controlled Markdown table cells in comparison, RAG, and TraceCard reports.
+
 ## v0.2.2 - 2026-06-15
 
 Launch-support release with public feedback and support materials.
