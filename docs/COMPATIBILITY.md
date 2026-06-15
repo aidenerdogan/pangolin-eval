@@ -37,5 +37,5 @@ Until then, pin exact versions for automation:
 
 ```bash
 python -m pip install \
-  https://github.com/aidenerdogan/pangolin-eval/releases/download/v0.2.2/pangolin_eval-0.2.2-py3-none-any.whl
+  https://github.com/aidenerdogan/pangolin-eval/releases/download/v0.2.3/pangolin_eval-0.2.3-py3-none-any.whl
 ```

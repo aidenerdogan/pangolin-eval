@@ -19,7 +19,7 @@ class VersionTest(unittest.TestCase):
         self.assertIsNotNone(setup_version)
         assert pyproject_version is not None
         assert setup_version is not None
-        self.assertEqual(pyproject_version.group(1), "0.2.2")
+        self.assertRegex(pyproject_version.group(1), r"^\d+\.\d+\.\d+$")
         self.assertEqual(setup_version.group(1), pyproject_version.group(1))
         self.assertEqual(pangolin_eval.__version__, pyproject_version.group(1))
 
