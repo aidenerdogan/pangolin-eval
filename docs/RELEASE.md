@@ -33,7 +33,8 @@ PYTHONPATH=src python3 -m pangolin_eval.cli rag --config examples/rag_eval/confi
 PYTHONPATH=src python3 -m pangolin_eval.cli trace --input examples/agent_trace/trace_events.json --out reports/agent_trace --html
 PYTHONPATH=src python3 -m pangolin_eval.cli export-otel --input reports/simple_model_compare/report.json --out reports/simple_model_compare/otel.json
 python3 -m venv /tmp/pangolin-eval-release-venv
-/tmp/pangolin-eval-release-venv/bin/python -m pip install --upgrade pip build
+/tmp/pangolin-eval-release-venv/bin/python -m pip install --upgrade pip
+/tmp/pangolin-eval-release-venv/bin/python -m pip install build==1.4.4
 /tmp/pangolin-eval-release-venv/bin/python -m build
 /tmp/pangolin-eval-release-venv/bin/python -m pip install --force-reinstall dist/pangolin_eval-*.whl
 /tmp/pangolin-eval-release-venv/bin/pangolin-eval --help

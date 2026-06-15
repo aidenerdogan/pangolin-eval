@@ -63,4 +63,4 @@ Repo: https://github.com/aidenerdogan/pangolin-eval
 - Which provider or gateway examples would help most?
 - Are the report fields useful for a real model-selection decision?
 - What would make the CI gate easier to adopt?
-- Which Pro/team workflow should be built first: history, dashboard, recommendation queue, alerts, or executive summaries?
+- Which team workflow would be most useful next: history, dashboard, recommendations, alerts, or executive summaries?

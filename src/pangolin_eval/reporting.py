@@ -121,11 +121,15 @@ def render_markdown(report: RunReport) -> str:
         for gate_result in report.gate_results:
             result = "pass" if gate_result.passed else "fail"
             lines.append(
-                f"| {gate_result.name} "
-                f"| {result} "
-                f"| {gate_result.actual:.6f} "
-                f"| {gate_result.threshold:.6f} "
-                f"| {gate_result.comparator} |"
+                markdown_table_row(
+                    [
+                        gate_result.name,
+                        result,
+                        f"{gate_result.actual:.6f}",
+                        f"{gate_result.threshold:.6f}",
+                        gate_result.comparator,
+                    ]
+                )
             )
 
     if report.aggregations:
@@ -140,13 +144,17 @@ def render_markdown(report: RunReport) -> str:
         )
         for aggregation in report.aggregations[:25]:
             lines.append(
-                f"| {aggregation.group_by} "
-                f"| {aggregation.key} "
-                f"| {aggregation.runs} "
-                f"| {aggregation.success_rate:.2f} "
-                f"| {format_optional_float(aggregation.avg_quality)} "
-                f"| {aggregation.avg_latency_ms:.0f} "
-                f"| {aggregation.total_cost_usd:.8f} |"
+                markdown_table_row(
+                    [
+                        aggregation.group_by,
+                        aggregation.key,
+                        aggregation.runs,
+                        f"{aggregation.success_rate:.2f}",
+                        format_optional_float(aggregation.avg_quality),
+                        f"{aggregation.avg_latency_ms:.0f}",
+                        f"{aggregation.total_cost_usd:.8f}",
+                    ]
+                )
             )
 
     if report.recommendations:
@@ -166,12 +174,16 @@ def render_markdown(report: RunReport) -> str:
                 else "n/a"
             )
             lines.append(
-                f"| {recommendation.category} "
-                f"| {recommendation.title} "
-                f"| {recommendation.quality_risk} "
-                f"| {recommendation.confidence} "
-                f"| {recommendation.evidence} "
-                f"| {savings} |"
+                markdown_table_row(
+                    [
+                        recommendation.category,
+                        recommendation.title,
+                        recommendation.quality_risk,
+                        recommendation.confidence,
+                        recommendation.evidence,
+                        savings,
+                    ]
+                )
             )
 
     lines.extend(["", "## Prompt Results", ""])
@@ -226,19 +238,23 @@ def render_rag_markdown(report: RagReport) -> str:
     )
     for result in report.results:
         lines.append(
-            f"| {result.model_id} "
-            f"| {result.question_id} "
-            f"| {format_optional_float(result.answer_coverage)} "
-            f"| {format_optional_float(result.faithfulness_score)} "
-            f"| {result.retrieved_context_tokens} "
-            f"| {result.answer_tokens} "
-            f"| {format_optional_float(result.context_efficiency)} "
-            f"| {result.unused_context_signal:.2f} "
-            f"| {result.repeated_context_signal:.2f} "
-            f"| {'yes' if result.oversized_context else 'no'} "
-            f"| {'yes' if result.missing_citation else 'no'} "
-            f"| {result.estimated_cost_usd:.8f} "
-            f"| {format_optional_cost(result.cost_per_covered_answer_usd)} |"
+            markdown_table_row(
+                [
+                    result.model_id,
+                    result.question_id,
+                    format_optional_float(result.answer_coverage),
+                    format_optional_float(result.faithfulness_score),
+                    result.retrieved_context_tokens,
+                    result.answer_tokens,
+                    format_optional_float(result.context_efficiency),
+                    f"{result.unused_context_signal:.2f}",
+                    f"{result.repeated_context_signal:.2f}",
+                    "yes" if result.oversized_context else "no",
+                    "yes" if result.missing_citation else "no",
+                    f"{result.estimated_cost_usd:.8f}",
+                    format_optional_cost(result.cost_per_covered_answer_usd),
+                ]
+            )
         )
 
     lines.extend(["", "## Answers", ""])
@@ -295,20 +311,24 @@ def render_tracecard_markdown(report: TraceCardReport) -> str:
             else "n/a"
         )
         lines.append(
-            f"| {card.task_id} "
-            f"| {card.outcome} "
-            f"| {card.total_cost_usd:.8f} "
-            f"| {card.total_latency_ms} "
-            f"| {card.input_tokens} "
-            f"| {card.output_tokens} "
-            f"| {card.retry_count} "
-            f"| {card.failure_count} "
-            f"| {card.failed_tool_call_count} "
-            f"| {card.cache_hit_count} "
-            f"| {card.repeated_step_count} "
-            f"| {card.wasted_cost_usd:.8f} "
-            f"| {'yes' if card.loop_risk else 'no'} "
-            f"| {cost_per_success} |"
+            markdown_table_row(
+                [
+                    card.task_id,
+                    card.outcome,
+                    f"{card.total_cost_usd:.8f}",
+                    card.total_latency_ms,
+                    card.input_tokens,
+                    card.output_tokens,
+                    card.retry_count,
+                    card.failure_count,
+                    card.failed_tool_call_count,
+                    card.cache_hit_count,
+                    card.repeated_step_count,
+                    f"{card.wasted_cost_usd:.8f}",
+                    "yes" if card.loop_risk else "no",
+                    cost_per_success,
+                ]
+            )
         )
 
     lines.extend(["", "## Events", ""])
@@ -522,17 +542,29 @@ def html_table(title: str, headers: list[str], rows: list[list[str]]) -> str:
 def render_summary_row(summary: ModelSummary) -> str:
     avg_quality = format_optional_float(summary.avg_quality)
     efficiency = format_optional_float(summary.efficiency_score)
-    return (
-        f"| {summary.model_id} "
-        f"| {summary.runs} "
-        f"| {summary.success_rate:.2f} "
-        f"| {avg_quality} "
-        f"| {summary.avg_latency_ms:.0f} "
-        f"| {summary.max_latency_ms:.0f} "
-        f"| {summary.total_cost_usd:.8f} "
-        f"| {efficiency} "
-        f"| {summary.recommendation} |"
+    return markdown_table_row(
+        [
+            summary.model_id,
+            summary.runs,
+            f"{summary.success_rate:.2f}",
+            avg_quality,
+            f"{summary.avg_latency_ms:.0f}",
+            f"{summary.max_latency_ms:.0f}",
+            f"{summary.total_cost_usd:.8f}",
+            efficiency,
+            summary.recommendation,
+        ]
     )
+
+
+def markdown_table_row(cells: list[object]) -> str:
+    return "| " + " | ".join(markdown_table_cell(cell) for cell in cells) + " |"
+
+
+def markdown_table_cell(value: object) -> str:
+    text = str(value)
+    text = " ".join(text.splitlines())
+    return text.replace("|", "\\|")
 
 
 def format_optional_float(value: float | None) -> str:
